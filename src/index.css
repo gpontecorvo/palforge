@@ -1,0 +1,75 @@
+body {
+  font: 14px "Century Gothic", Futura, sans-serif;
+  color: #283966;
+  background-color: #DBEBFF;
+  margin: 20px;
+}
+
+ol, ul {
+  padding-left: 30px;
+}
+
+.palforge {
+  display: flex;
+  flex-direction: row;
+}
+
+div {
+  margin: 5px;
+}
+
+.pal-button {
+  box-shadow: 0px 0px 0px 2px #9fb4f2;
+  background:linear-gradient(to bottom, #7892c2 5%, #476e9e 100%);
+  background-color:#7892c2;
+  border-radius:10px;
+  border:1px solid #4e6096;
+  display:inline-block;
+  cursor:pointer;
+  color:#ffffff;
+  font-family:Arial;
+  font-size:12px;
+  padding:6px 18px;
+  margin:3px ;
+  text-decoration:none;
+  text-shadow:0px 1px 0px #283966;
+}
+.pal-button:hover {
+  background:linear-gradient(to bottom, #476e9e 5%, #7892c2 100%);
+  background-color:#476e9e;
+}
+.pal-button:active {
+  position:relative;
+  top:1px;
+}
+.pal-display {
+  display: block;
+//height: 8em;
+  width: 45em;
+}
+
+.palindrome-input {
+  height: 8em;
+  width: 35em;
+  border: thick red;
+}
+
+.is-pal {
+  background-color: darkseagreen;
+}
+.not-pal {
+  background-color: lightpink;
+}
+
+.input-area {
+  padding: 10px;
+  border: #283966 4px solid ;
+}
+
+.midpoint {
+  font-weight: bold;
+  font-size: larger;
+}
+.indent {
+  margin-left: 25px;
+}
