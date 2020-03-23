@@ -17,6 +17,8 @@ div {
 
 .list {
   padding: 0px;
+  margin-top: -5px;
+
 }
 .list-item {
   border: 1px solid black;
@@ -95,7 +97,7 @@ div {
 }
 
 .thumb-green {
-  background: url("resources/check.jpeg") ;
+  background: url("resources/green-thumbs-up.png") ;
 }
 
 .thumb-red {
