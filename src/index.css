@@ -15,11 +15,11 @@ div {
   margin: 5px;
 }
 
-ul {
-  list-style: none;
+.list {
   padding: 0px;
 }
-li {
+.list-item {
+  border: 1px solid black;
   padding: 0px 5px;
 }
 
@@ -68,6 +68,7 @@ li {
 
 .input-area {
   padding: 10px;
+  background-color: #ededcb;
 }
 .section-border {
   border: #283966 2px solid;
@@ -80,7 +81,7 @@ li {
 }
 .indent {
   margin-left: 25px;
-  padding: 3px 5px;
+  padding: 5px 5px;
 }
 
 .thumb {
@@ -103,6 +104,12 @@ li {
 .palindrome-status {
    font-size: x-small;
    text-align: left;
-   vertical-align: middle;
-   height:20px;
+   vertical-align: after-edge;
+  border : 1px solid #cccccc;
+  padding: 1px 3px;
+  height: 15px;
+  width: 75px;
  }
+.even-smaller {
+  font-size: xx-small;
+}

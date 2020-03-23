@@ -60,9 +60,9 @@ class TextInput extends React.Component {
                                value  = {this.state.text} />
                 </div>
                 {this.state.isPalindrome &&
-                <div className={"palindrome-status"}><span>&#128540;</span> palindrome</div>}
+                <div className={"palindrome-status is-pal"}><span className={"even-smaller"}>&#128540;</span> palindrome </div>}
                 {!this.state.isPalindrome &&
-                <div className={"palindrome-status"}><span>not</span> palindrome </div>}
+                <div className={"palindrome-status not-pal"}><span>not</span> palindrome </div>}
                 <div>
                     <button className="pal-button" onClick = {this.reverseText.bind(this)} >
                         Reverse input
@@ -152,9 +152,9 @@ class Palindrome extends React.Component {
         }
 
         return (
-            <div>
+            <div className={""}>
                 <div
-                    className={ ["input-area", "section-border", palColorClass].join(" ")}>
+                    className={ ["input-area", "section-border"].join(" ")}>
                     <TextInput
                         onChange={this.onChange.bind(this)}
                         reverseText={this.reverseText.bind(this)}
@@ -168,17 +168,20 @@ class Palindrome extends React.Component {
                 <div>
                     {/*<div className={this.palindromeClass(this.state.palindrome)}>It is {this.isPalindrome(this.state.palindrome) ? "" : "not "}a palindrome.</div>*/}
                     <div>Input as typed:</div>
-                    <div className="indent">{this.state.palindrome} </div>
+                    <div className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{this.state.palindrome} </div>
                     <div>Reversed input: (Turnaround is <strong>{smoothedParts[1]}</strong>)</div>
                     <div className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothHtml}</div>
                 </div>}
                 <div>
-                    {this.state.savedPals.length > 0 ? "Saved Palindromes" : ""}
-                    <ul className={"section-border"}>
-                        {this.state.savedPals.map((item, key) =>
-                            <li className={"list-item " + this.palindromeClass(item.pal) } key={item.index}>{item.pal}  {this.number}</li>)}
+                    {this.state.savedPals.length > 0 &&
+                    <div className="indent">
+                        {this.state.savedPals.length > 0 ? "Saved Palindromes" : ""}
+                        <ol className={"list section-border"}>
+                            {this.state.savedPals.map((item, key) =>
+                                <li className={"list-item " + this.palindromeClass(item.pal) } key={item.index}>{item.pal}</li>)}
 
-                    </ul>
+                        </ol>
+                    </div>}
                 </div>
             </div>
         );
@@ -257,8 +260,8 @@ class Palforge extends React.Component {
         return (
             <div>
                 <div>
-                    <h3>The Palindrome Forge</h3>
-                    <h6>&copy;2020 Greg Pontecorvo. All rites observed.</h6>
+                    <h3>The Palindrome Forge<br/>
+                    <span className={"even-smaller"}>&copy;2020 Greg Pontecorvo. All rites observed.</span> </h3>
                 </div>
                 <div className="palforge">
                     <Palindrome/>
