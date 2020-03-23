@@ -152,7 +152,8 @@ class Palindrome extends React.Component {
         }
 
         return (
-            <div className={""}>
+            <div>
+                {!haveInput && <div>Enter text to create a palindrome</div>}
                 <div
                     className={ ["input-area", "section-border"].join(" ")}>
                     <TextInput
@@ -163,26 +164,26 @@ class Palindrome extends React.Component {
                         checkPalindrome={this.checkPalindrome.bind(this)}
                     />
                 </div>
-                {!haveInput && <div>Enter text to create a palindrome</div>}
                 {haveInput &&
                 <div>
-                    {/*<div className={this.palindromeClass(this.state.palindrome)}>It is {this.isPalindrome(this.state.palindrome) ? "" : "not "}a palindrome.</div>*/}
                     <div>Input as typed:</div>
                     <div className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{this.state.palindrome} </div>
                     <div>Reversed input: (Turnaround is <strong>{smoothedParts[1]}</strong>)</div>
                     <div className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothHtml}</div>
                 </div>}
-                <div>
-                    {this.state.savedPals.length > 0 &&
-                    <div className="indent">
-                        {this.state.savedPals.length > 0 ? "Saved Palindromes" : ""}
-                        <ol className={"list section-border"}>
-                            {this.state.savedPals.map((item, key) =>
-                                <li className={"list-item " + this.palindromeClass(item.pal) } key={item.index}>{item.pal}</li>)}
 
-                        </ol>
+                    {this.state.savedPals.length > 0 &&
+                    <div>
+                        <div>Saved Palindromes</div>
+                        <div className="indent">
+
+                            <ol className={"list section-border"}>
+                                {this.state.savedPals.map((item, key) =>
+                                    <li className={"list-item " + this.palindromeClass(item.pal) } key={item.index}>{item.pal}</li>)}
+
+                            </ol>
+                        </div>
                     </div>}
-                </div>
             </div>
         );
     }
