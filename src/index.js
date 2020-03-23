@@ -153,7 +153,7 @@ class Palindrome extends React.Component {
 
         return (
             <div>
-                {!haveInput && <div>Enter text to create a palindrome</div>}
+                <div>Enter text to create a palindrome</div>
                 <div
                     className={ ["input-area", "section-border"].join(" ")}>
                     <TextInput
