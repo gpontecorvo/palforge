@@ -7,15 +7,20 @@ class TextInput extends React.Component {
         super(props);
         this.state = {
             text: "",
+            isPalindrome: true,
         }
     }
 
     onChange = (e) => {
         const value = e.target.value;
+        // alert("before checkpal " + value);
         this.props.onChange(value);
+        const isPal = this.props.checkPalindrome(value);
         this.setState( () => ({
             text: value,
+            isPalindrome: isPal,
         }));
+
     }
 
     reverseText = () => {
@@ -24,6 +29,10 @@ class TextInput extends React.Component {
             text: flipped,
         }));
     }
+
+    checkPalindrome = () => {
+        return this.props.checkPalindrome(this.state.text);
+     }
 
     saveText = () => {
         const saved = this.props.saveText(this.state.text);
@@ -50,6 +59,10 @@ class TextInput extends React.Component {
                     <textarea  className="palindrome-input" onChange={this.onChange.bind(this)}
                                value  = {this.state.text} />
                 </div>
+                {this.state.isPalindrome &&
+                <div className={"palindrome-status"}><span>&#128540;</span> palindrome</div>}
+                {!this.state.isPalindrome &&
+                <div className={"palindrome-status"}><span>not</span> palindrome </div>}
                 <div>
                     <button className="pal-button" onClick = {this.reverseText.bind(this)} >
                         Reverse input
@@ -92,6 +105,9 @@ class Palindrome extends React.Component {
             palindrome: flipped,
         }));
         return flipped;
+    }
+    checkPalindrome = (str) => {
+        return this.isPalindrome(str);
     }
 
     saveText = (str) => {
@@ -138,28 +154,30 @@ class Palindrome extends React.Component {
         return (
             <div>
                 <div
-                    className={ ["input-area", palColorClass].join(" ")}>
+                    className={ ["input-area", "section-border", palColorClass].join(" ")}>
                     <TextInput
                         onChange={this.onChange.bind(this)}
                         reverseText={this.reverseText.bind(this)}
                         saveText={this.saveText.bind(this)}
                         clearSaved={this.clearSaved.bind(this)}
+                        checkPalindrome={this.checkPalindrome.bind(this)}
                     />
                 </div>
                 {!haveInput && <div>Enter text to create a palindrome</div>}
                 {haveInput &&
                 <div>
-                    <div>It is {this.isPalindrome(this.state.palindrome) ? "" : "not "}a palindrome.</div>
+                    {/*<div className={this.palindromeClass(this.state.palindrome)}>It is {this.isPalindrome(this.state.palindrome) ? "" : "not "}a palindrome.</div>*/}
                     <div>Input as typed:</div>
                     <div className="indent">{this.state.palindrome} </div>
                     <div>Reversed input: (Turnaround is <strong>{smoothedParts[1]}</strong>)</div>
-                    <div className="indent">{smoothHtml}</div>
+                    <div className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothHtml}</div>
                 </div>}
                 <div>
                     {this.state.savedPals.length > 0 ? "Saved Palindromes" : ""}
-                    <ul>
+                    <ul className={"section-border"}>
                         {this.state.savedPals.map((item, key) =>
-                            <ol key={item.index}>{item.pal}  {this.number}</ol>)}
+                            <li className={"list-item " + this.palindromeClass(item.pal) } key={item.index}>{item.pal}  {this.number}</li>)}
+
                     </ul>
                 </div>
             </div>
@@ -189,7 +207,7 @@ class Palindrome extends React.Component {
     stripWhiteSpace(str) {
         return str.replace(/\s/g, "");
     }
-//123456789
+
     isPalindrome(str) {
         var normal = this.normalizeString(str);
         return normal === this.reverseString(normal);
@@ -205,6 +223,10 @@ class Palindrome extends React.Component {
         parts.push(smooth.substring((nChars - turnaroundSize) + turnaroundSize*2 ));
 
         return parts;
+    }
+
+    palindromeClass (str) {
+        return str ? (this.isPalindrome(str) ? "is-pal" : "not-pal") : "";
     }
 
     load = () => {
@@ -235,7 +257,8 @@ class Palforge extends React.Component {
         return (
             <div>
                 <div>
-                    <h2>The Palindrome Forge</h2>
+                    <h3>The Palindrome Forge</h3>
+                    <h6>&copy;2020 Greg Pontecorvo. All rites observed.</h6>
                 </div>
                 <div className="palforge">
                     <Palindrome/>

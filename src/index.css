@@ -1,12 +1,9 @@
 body {
   font: 14px "Century Gothic", Futura, sans-serif;
   color: #283966;
-  background-color: #DBEBFF;
+  background-color: #eeeeee;
   margin: 20px;
-}
-
-ol, ul {
-  padding-left: 30px;
+  width: auto;
 }
 
 .palforge {
@@ -16,6 +13,14 @@ ol, ul {
 
 div {
   margin: 5px;
+}
+
+ul {
+  list-style: none;
+  padding: 0px;
+}
+li {
+  padding: 0px 5px;
 }
 
 .pal-button {
@@ -55,16 +60,19 @@ div {
 }
 
 .is-pal {
-  background-color: darkseagreen;
+  background-color: #ddeedd;
 }
 .not-pal {
-  background-color: lightpink;
+  background-color: #eedddd;
 }
 
 .input-area {
   padding: 10px;
-  border: #283966 4px solid ;
 }
+.section-border {
+  border: #283966 2px solid;
+}
+
 
 .midpoint {
   font-weight: bold;
@@ -72,4 +80,29 @@ div {
 }
 .indent {
   margin-left: 25px;
+  padding: 3px 5px;
 }
+
+.thumb {
+  vertical-align: middle;
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  background-size: 100%;
+  background-size: 100% 100%;
+  z-index: 1000;
+}
+
+.thumb-green {
+  background: url("resources/check.jpeg") ;
+}
+
+.thumb-red {
+   background: none;
+}
+.palindrome-status {
+   font-size: x-small;
+   text-align: left;
+   vertical-align: middle;
+   height:20px;
+ }
