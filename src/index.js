@@ -2,6 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
+/**
+ * Component to accept input with button hooks to parent <Palindrome/> to:
+ * reverse what's been typed
+ * check if it's a palindrome
+ * save text to storage
+ * clear storage
+ *
+ * */
 class TextInput extends React.Component {
     constructor(props) {
         super(props);
@@ -13,7 +21,6 @@ class TextInput extends React.Component {
 
     onChange = (e) => {
         const value = e.target.value;
-        // alert("before checkpal " + value);
         this.props.onChange(value);
         const isPal = this.props.checkPalindrome(value);
         this.setState( () => ({
@@ -42,14 +49,12 @@ class TextInput extends React.Component {
     }
 
     clearSaved = () => {
-        const saved = this.state.text;
+        const saveText = this.state.text;
         this.props.clearSaved();
         this.setState( () => ({
-            text: saved,
+            text: saveText,
         }));
     }
-
-
 
     render() {
         return (
@@ -81,7 +86,15 @@ class TextInput extends React.Component {
 }
 
 
-
+/**
+ * Component to create palindromes, with visual aids to
+ * assist the process and store results and clear stored
+ * reverse what's been typed
+ * check if it's a palindrome
+ * save text to storage
+ * clear storage
+ *
+ * */
 class Palindrome extends React.Component {
     constructor(props) {
         super(props);
@@ -89,7 +102,6 @@ class Palindrome extends React.Component {
             palindrome: "",
             savedPalsString: this.load(),
             savedPals: []
-
         }
     }
 
@@ -114,7 +126,7 @@ class Palindrome extends React.Component {
         if (!str) {
             return "";
         }
-//alert("saveText: " + str);
+
         const saveStr = str;
         let savedCopy = JSON.parse(JSON.stringify(this.state.savedPals));
         savedCopy.push({"key" : Date.now(), "pal":  saveStr});
@@ -123,7 +135,7 @@ class Palindrome extends React.Component {
             savedPals: savedCopy,
             savedPalsString: saveString,
         }));
-       // alert("saveString: " + saveString);
+
         this.persist(saveString);
         return str;
     }
@@ -145,17 +157,18 @@ class Palindrome extends React.Component {
             <span className="midpoint">{smoothedParts[1]}</span>,
             <span>{smoothedParts[2]}</span>);
         if (this.state.savedPals.length === 0 && this.state.savedPalsString.length > 0) {
-            const save = JSON.parse(this.state.savedPalsString);
+            const savedPalsObj = JSON.parse(this.state.savedPalsString);
             this.setState( () => ({
-                savedPals: save,
+                savedPals: savedPalsObj,
             }));
         }
 
         return (
             <div>
-                <div>Enter text to create a palindrome</div>
+                <div>Enter text to create a palindrome:</div>
                 <div
-                    className={ ["input-area", "section-border"].join(" ")}>
+                    className={"input-area section-border"}>
+                    {/*bind methods for the child */}
                     <TextInput
                         onChange={this.onChange.bind(this)}
                         reverseText={this.reverseText.bind(this)}
@@ -197,28 +210,50 @@ class Palindrome extends React.Component {
         return this.stripWhiteSpace(this.stripPunctuation(this.stripDiacriticals(str))).toUpperCase()
             .split("").join(" ");
     }
-
+/**
+ * Strips all diacriticals (accented or decorated characters) by separating the parts, and removing the non-alphanumeric.
+ * TODO: Known issues - "ß" which ends up as "ss" not "s" and æ which ends up as "ae" and perhaps some other similar
+ *
+ * */
     stripDiacriticals(str) {
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
+    /**
+     * Strips all puncutation
+     * It's a fairly exhaustive regex I found on the web so it must be correct :)
+     *
+     * */
     stripPunctuation(str) {
         return str.replace(
             /[!-/:-@[-`{-~¡-©«-¬®-±´¶-¸»¿×÷˂-˅˒-˟˥-˫˭˯-˿͵;΄-΅·϶҂՚-՟։-֊־׀׃׆׳-״؆-؏؛؞-؟٪-٭۔۩۽-۾܀-܍߶-߹।-॥॰৲-৳৺૱୰௳-௺౿ೱ-ೲ൹෴฿๏๚-๛༁-༗༚-༟༴༶༸༺-༽྅྾-࿅࿇-࿌࿎-࿔၊-၏႞-႟჻፠-፨᎐-᎙᙭-᙮᚛-᚜᛫-᛭᜵-᜶។-៖៘-៛᠀-᠊᥀᥄-᥅᧞-᧿᨞-᨟᭚-᭪᭴-᭼᰻-᰿᱾-᱿᾽᾿-῁῍-῏῝-῟῭-`´-῾\u2000-\u206e⁺-⁾₊-₎₠-₵℀-℁℃-℆℈-℉℔№-℘℞-℣℥℧℩℮℺-℻⅀-⅄⅊-⅍⅏←-⏧␀-␦⑀-⑊⒜-ⓩ─-⚝⚠-⚼⛀-⛃✁-✄✆-✉✌-✧✩-❋❍❏-❒❖❘-❞❡-❵➔➘-➯➱-➾⟀-⟊⟌⟐-⭌⭐-⭔⳥-⳪⳹-⳼⳾-⳿⸀-\u2e7e⺀-⺙⺛-⻳⼀-⿕⿰-⿻\u3000-〿゛-゜゠・㆐-㆑㆖-㆟㇀-㇣㈀-㈞㈪-㉃㉐㉠-㉿㊊-㊰㋀-㋾㌀-㏿䷀-䷿꒐-꓆꘍-꘏꙳꙾꜀-꜖꜠-꜡꞉-꞊꠨-꠫꡴-꡷꣎-꣏꤮-꤯꥟꩜-꩟﬩﴾-﴿﷼-﷽︐-︙︰-﹒﹔-﹦﹨-﹫！-／：-＠［-｀｛-･￠-￦￨-￮￼-�]|\ud800[\udd00-\udd02\udd37-\udd3f\udd79-\udd89\udd90-\udd9b\uddd0-\uddfc\udf9f\udfd0]|\ud802[\udd1f\udd3f\ude50-\ude58]|\ud809[\udc00-\udc7e]|\ud834[\udc00-\udcf5\udd00-\udd26\udd29-\udd64\udd6a-\udd6c\udd83-\udd84\udd8c-\udda9\uddae-\udddd\ude00-\ude41\ude45\udf00-\udf56]|\ud835[\udec1\udedb\udefb\udf15\udf35\udf4f\udf6f\udf89\udfa9\udfc3]|\ud83c[\udc00-\udc2b\udc30-\udc93]/g,
             "");
     }
 
+    /**
+     * Strips all white space
+     * */
     stripWhiteSpace(str) {
         return str.replace(/\s/g, "");
     }
 
+    /**
+     * Checks if str is a plindrome by normalizing it and comparing to its reverse
+     * */
     isPalindrome(str) {
         var normal = this.normalizeString(str);
         return normal === this.reverseString(normal);
     }
+
+
+    /** Does the following:
+     * 1. normailize (emoves whitespace, punctuation and diacriticals, then formats with one space between uppercase characters
+     * I have found this to be the easiest format for the eye to pick up on word patterns.
+     * 2. revese string
+     * 3. return array with three strings: before the midpoint, the midpoint or turnaround string, after the midpoint
+     * */
     smooth (str) {
         var smooth = this.reverseString(this.normalizeString(str));
-        //alert ("|" + smooth + "|");
         var nChars = (smooth.length+1)/2;
         var turnaroundSize = ((nChars % 2) === 0 ? 4 : 3);
         var parts = [];
@@ -229,32 +264,41 @@ class Palindrome extends React.Component {
         return parts;
     }
 
+    /**
+     *  convenience method to return different  color class names for palindrome vs. nonpalindrome
+     *  Slightly klugey
+     *  TODO: separate concerns better
+     * @returns {string | representing the color class to use for formatting}
+     */
     palindromeClass (str) {
         return str ? (this.isPalindrome(str) ? "is-pal" : "not-pal") : "";
     }
 
+    /**
+     * hook for persistence
+     * TODO: change to use real database instead of localStorage
+     * @returns {string | string}
+     */
     load = () => {
         return localStorage.getItem("savedPals") || "";
     }
 
-    persist = (str) => {
+    /**
+     * hook for persistence
+     * TODO: change to use real database instead of localStorage
+     * @returns {string | string}
+     */    persist = (str) => {
         return localStorage.setItem("savedPals", str);
     }
 }
 
 
-
+/**
+ * Main cllass to contain the working part(s)
+ */
 class Palforge extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            history: [
-                {
-                    palindromes: Array(9).fill(null)
-                }
-            ],
-
-        }
     }
 
     render() {
