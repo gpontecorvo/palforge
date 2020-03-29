@@ -39,5 +39,31 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+    <!-- Insert these scripts at the bottom of the HTML, but before you use any Firebase services -->
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyCso_rZ5fBlTnGDfo8wt-uOvbQ71mWi1kI",
+        authDomain: "palforge-7c736.firebaseapp.com",
+        databaseURL: "https://palforge-7c736.firebaseio.com",
+        projectId: "palforge-7c736",
+        storageBucket: "palforge-7c736.appspot.com",
+        messagingSenderId: "1087525279209",
+        appId: "1:1087525279209:web:bb4aa3ebc4dd18ec7ae778",
+        measurementId: "G-LFW0Y1ZXVV"
+      };
+    </script>
+
+    <script src="/__/firebase/7.13.0/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+         https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="/__/firebase/7.12.0/firebase-firestore.js"></script>
+    <script src="/__/firebase/7.13.0/firebase-analytics.js"></script>
+
+    <!-- Initialize Firebase -->
+    <script src="/__/firebase/init.js"></script>
+
   </body>
 </html>

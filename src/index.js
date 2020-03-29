@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import firebase from './firebase.js'     // <------  import firebase
+
+
+var db = firebase.firestore();
 
 /**
  * Component to accept input with button hooks to parent <Palindrome/> to:
@@ -65,7 +69,7 @@ class TextInput extends React.Component {
                                value  = {this.state.text} />
                 </div>
                 {this.state.isPalindrome &&
-                <div className={"palindrome-status is-pal"}><span className={"even-smaller"}>&#128540;</span> palindrome </div>}
+                <div className={"palindrome-status is-pal"}><span role="img" aria-label={"smiley"} className={"even-smaller"}>&#128540;</span> palindrome </div>}
                 {!this.state.isPalindrome &&
                 <div className={"palindrome-status not-pal"}><span>not</span> palindrome </div>}
                 <div>
@@ -98,12 +102,41 @@ class TextInput extends React.Component {
 class Palindrome extends React.Component {
     constructor(props) {
         super(props);
+        const loaded = this.load();
         this.state = {
             palindrome: "",
-            savedPalsString: this.load(),
-            savedPals: []
+            savedPalsString: !loaded ? "" : loaded,
+            savedPals: !loaded ? [] : JSON.parse(loaded),
+            dbPalindromes: {"palindromes" : []},
+            palfilter: "all"
         }
+     }
+
+    componentDidMount() {
+        this.reloadFromDb();
+
+
+     }
+
+    reloadFromDb() {
+        var thePalindromes = {"palindromes": []};
+        db.collection("/palindromes").get().then((querySnapshot) => {
+//                console.log("querySnapShot " + JSON.stringify(querySnapshot));
+            querySnapshot.forEach((doc) => {
+                var theRaw = `${doc.data().raw}`;
+                var theCooked = `${doc.data().cooked}`;
+                var theId = `${doc.id}`;
+                thePalindromes.palindromes.push({"raw": theRaw, "cooked": theCooked, id: theId, selected: false});
+            });
+            // console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
+            this.setState({
+                dbPalindromes: thePalindromes
+            });
+        });
+        return thePalindromes;
     }
+    //console.log("byId? " + JSON.stringify(thePalindromes.palindromes.filter(obj => obj.id === "0OMgK4Bd5cFLa8pw5O4m")));
+
 
     onChange = (value) => {
         this.setState( () => ({
@@ -137,10 +170,43 @@ class Palindrome extends React.Component {
         }));
 
         this.persist(saveString);
+        this.addToDb(str);
+        this.reloadFromDb();
         return str;
     }
 
-    clearSaved = () => {
+    deleteSelected = () => {
+        var selected = this.state.dbPalindromes.palindromes.filter(pal => pal.selected);
+       selected.map(pal => {
+           this.deleteDocument(pal);
+           return pal;
+       });
+       this.reloadFromDb();
+    };
+
+    deleteDocument = (pal) => {
+            db.collection("/palindromes").doc(pal.id).delete().then(function() {
+            console.log("Palindrome successfully deleted " + JSON.stringify(pal));
+        }).catch(function(error) {
+            console.error("Error removing document: ", error);
+        });
+    }
+
+    addToDb = (str) => {
+        db.collection("palindromes").add({
+            raw: str,
+            cooked: this.normalizeString(str)
+        })
+            .then(function(docRef) {
+                console.log("Document written with ID: ", docRef.id);
+            })
+            .catch(function(error) {
+                console.error("Error adding document: ", error);
+            });
+
+    }
+
+        clearSaved = () => {
         this.setState( () => ({
             savedPals: [],
             savedPalsString: "",
@@ -148,20 +214,48 @@ class Palindrome extends React.Component {
         this.persist("");
     }
 
+    evaluatePalFilter = (str) => {
+        switch (this.state.palfilter) {
+            case "all":
+                return true;
+            case "onlypals":
+                return this.isPalindrome(str);
+            case "notpals":
+                return !this.isPalindrome(str);
+            default:
+                return true;
+        }
+    };
+
+
+    handleChecked = (event) => {
+        var docId = event.target.value;
+        var thePalindromes = JSON.parse(JSON.stringify(this.state.dbPalindromes.palindromes));
+        var position = thePalindromes.findIndex(function(element, index, array) {
+            return element.id === docId
+        });
+
+        thePalindromes[position].selected = !thePalindromes[position].selected;
+//        console.log("item : " + JSON.stringify(thePalindromes[position]));
+        this.setState({
+            dbPalindromes: {palindromes: thePalindromes}
+        });
+    };
+
+    handleOptionChange = event => {
+        this.setState({
+            palfilter: event.target.value
+        });
+    };
+
     render() {
-        const palColorClass = this.isPalindrome(this.state.palindrome) ? "is-pal" : "not-pal";
+
         let haveInput = this.state.palindrome.length > 0;
         let smoothedParts = this.smooth(this.state.palindrome);
         let smoothHtml = [];
-        smoothHtml.push(<span>{smoothedParts[0]}</span>,
+        smoothHtml.push(<span key={Date.now()}>{smoothedParts[0]}</span>,
             <span className="midpoint">{smoothedParts[1]}</span>,
             <span>{smoothedParts[2]}</span>);
-        if (this.state.savedPals.length === 0 && this.state.savedPalsString.length > 0) {
-            const savedPalsObj = JSON.parse(this.state.savedPalsString);
-            this.setState( () => ({
-                savedPals: savedPalsObj,
-            }));
-        }
 
         return (
             <div>
@@ -192,14 +286,84 @@ class Palindrome extends React.Component {
 
                             <ol className={"list section-border"}>
                                 {this.state.savedPals.map((item, key) =>
-                                    <li className={"list-item " + this.palindromeClass(item.pal) } key={item.index}>{item.pal}</li>)}
+                                    <li className={"list-item " + this.palindromeClass(item.pal) } key={item.key}>{item.pal}</li>)}
 
                             </ol>
                         </div>
                     </div>}
+                <div>
+                    <div>DB palindromes:
+                        <button className="pal-button" onClick = {this.deleteSelected} >
+                            Delete Selected
+                        </button>
+                    </div>
+                    <div className="indent">
+                        <ol className={"list section-border"}>
+                            {this.state.dbPalindromes.palindromes
+                                .filter(pal => this.evaluatePalFilter(pal.raw))
+                                .map((item, key) =>
+                                    <li className={"list-item no-margin " + this.palindromeClass(item.raw)}
+                                        key={item.id}>
+                                        <input
+                                            type="checkbox"
+                                            name="listitems"
+                                            checked={item.selected}
+                                            onChange={this.handleChecked}
+                                            value={item.id}
+                                            className={"checkbox"}
+                                        />
+                                        <span>{item.raw}</span>
+                                    </li>
+                                )}
+                        </ol>
+                    </div>
+
+                    <div>
+                        <div className="radio-button">
+                            <label>
+                                <input
+                                    type="radio"
+                                    name="palfilter"
+                                    value="all"
+                                    checked={this.state.palfilter === "all"}
+                                    onChange={this.handleOptionChange}
+                                    className=""
+                                />
+                                All
+                            </label>
+                        </div>
+                        <div className="radio-button">
+                            <label>
+                                <input
+                                    type="radio"
+                                    name="palfilter"
+                                    value="onlypals"
+                                    checked={this.state.palfilter === "onlypals"}
+                                    onChange={this.handleOptionChange}
+                                    className=""
+                                />
+                                Only Palindromes
+                            </label>
+                        </div>
+                        <div className="radio-button">
+                            <label>
+                                <input
+                                    type="radio"
+                                    name="palfilter"
+                                    value="notpals"
+                                    checked={this.state.palfilter === "notpals"}
+                                    onChange={this.handleOptionChange}
+                                    className=""
+                                />
+                                Only Non-palindromes
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
+
     reverseString(str) {
         return str.split("").reverse().join("");
     }
@@ -297,21 +461,23 @@ class Palindrome extends React.Component {
  * Main cllass to contain the working part(s)
  */
 class Palforge extends React.Component {
-    constructor(props) {
-        super(props);
-    }
+    // constructor(props) {
+    //     super(props);
+    // }
 
     render() {
+
         return (
             <div>
                 <div>
                     <h3>The Palindrome Forge<br/>
-                    <span className={"even-smaller"}>&copy;2020 Greg Pontecorvo. All rites observed.</span> </h3>
+
+                    <span className={"emoji even-smaller"} role="img" aria-label={"copyright"}>
+                            &copy;2020 Greg Pontecorvo. All rites observed.</span> </h3>
                 </div>
                 <div className="palforge">
                     <Palindrome/>
                 </div>
-
             </div>
         );
     }

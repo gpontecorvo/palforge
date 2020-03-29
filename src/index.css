@@ -15,14 +15,19 @@ div {
   margin: 5px;
 }
 
+div .no-margin {
+  margin: 0px;
+}
+
 .list {
   padding: 0px;
   margin-top: -5px;
-
 }
+
 .list-item {
   border: 1px solid black;
   padding: 0px 5px;
+  /*display: inline-block;*/
 }
 
 .pal-button {
@@ -115,3 +120,13 @@ div {
 .even-smaller {
   font-size: xx-small;
 }
+
+.radio-button {
+  margin: 5px ;
+  display: inline-block;
+}
+
+.checkbox {
+   display: inline-block;
+   margin: 7px;
+ }
