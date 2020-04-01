@@ -1,8 +1,36 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import firebase from './firebase.js'     // <------  import firebase
+import firebase from './firebase.js'
+import {firestore} from "firebase";
 
+// import * as firebase from 'firebase/app';
+// import 'firebase/firestore';
+
+
+// import firebase from 'firebase/app';
+// import 'firebase/firestore';
+
+
+
+// const firebase = require('firebase/app');
+// require('firebase/firestore');
+
+
+//import {Timestamp} from "@firebase/firestore/dist/src/api/timestamp"; // <------  import firebase
+
+// import app from 'firebase/app';
+// import 'firebase/auth';
+//import 'firebase/firestore';
+
+// import 'firebase/messaging';
+// import { rootCollection, field, timestamp, Entity, ITimestamp } from 'firebase-firestorm';
+// import * as firestorm from 'firebase-firestorm';
+// import 'reflect-metadata';
+
+
+
+// import { rootCollection, field, timestamp, Entity, ITimestamp } from 'firebase-firestorm';
 
 var db = firebase.firestore();
 
@@ -108,7 +136,8 @@ class Palindrome extends React.Component {
             savedPalsString: !loaded ? "" : loaded,
             savedPals: !loaded ? [] : JSON.parse(loaded),
             dbPalindromes: {"palindromes" : []},
-            palfilter: "all"
+            palfilter: "all",
+            allNone: false
         }
      }
 
@@ -126,7 +155,14 @@ class Palindrome extends React.Component {
                 var theRaw = `${doc.data().raw}`;
                 var theCooked = `${doc.data().cooked}`;
                 var theId = `${doc.id}`;
-                thePalindromes.palindromes.push({"raw": theRaw, "cooked": theCooked, id: theId, selected: false});
+                var theCreateTime = new Date(`${doc.data().createTime.seconds}`*1000);
+                thePalindromes.palindromes.push({
+                    "raw": theRaw,
+                    "cooked": theCooked,
+                    id: theId,
+                    selected: false,
+                    createTime: theCreateTime
+                });
             });
             // console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
             this.setState({
@@ -161,7 +197,7 @@ class Palindrome extends React.Component {
         }
 
         const saveStr = str;
-        let savedCopy = JSON.parse(JSON.stringify(this.state.savedPals));
+        let savedCopy = this.state.savedPals.slice();
         savedCopy.push({"key" : Date.now(), "pal":  saveStr});
         let saveString = JSON.stringify(savedCopy);
         this.setState( () => ({
@@ -195,7 +231,8 @@ class Palindrome extends React.Component {
     addToDb = (str) => {
         db.collection("palindromes").add({
             raw: str,
-            cooked: this.normalizeString(str)
+            cooked: this.normalizeString(str),
+            createTime: firestore.Timestamp.fromDate(new Date())
         })
             .then(function(docRef) {
                 console.log("Document written with ID: ", docRef.id);
@@ -230,7 +267,7 @@ class Palindrome extends React.Component {
 
     handleChecked = (event) => {
         var docId = event.target.value;
-        var thePalindromes = JSON.parse(JSON.stringify(this.state.dbPalindromes.palindromes));
+        var thePalindromes = this.state.dbPalindromes.palindromes.slice();
         var position = thePalindromes.findIndex(function(element, index, array) {
             return element.id === docId
         });
@@ -242,7 +279,18 @@ class Palindrome extends React.Component {
         });
     };
 
+    handleAllNoneChecked = (event) => {
+        var isSelected = !this.state.allNone;
+        var thePalindromes = this.state.dbPalindromes.palindromes.slice();
+        thePalindromes.map((item) => item.selected = isSelected);
+        this.setState({
+            dbPalindromes: {palindromes: thePalindromes},
+            allNone: isSelected
+        });
+    };
+
     handleOptionChange = event => {
+
         this.setState({
             palfilter: event.target.value
         });
@@ -292,30 +340,54 @@ class Palindrome extends React.Component {
                         </div>
                     </div>}
                 <div>
-                    <div>DB palindromes:
-                        <button className="pal-button" onClick = {this.deleteSelected} >
-                            Delete Selected
-                        </button>
+                    <div>
+                        <div>DB palindromes:</div>
                     </div>
                     <div className="indent">
-                        <ol className={"list section-border"}>
+                        <table className={"list section-border"}>
+                            <thead>
+                            <tr>
+                                <th>
+                                    <input
+                                        type="checkbox"
+                                        name="allNone"
+                                        checked={this.state.allNone}
+                                        onChange={this.handleAllNoneChecked}
+                                        value={"value"}
+                                        className={"checkbox"}
+                                    />
+
+                                </th>
+                                <th>Entry</th>
+                                <th>Created</th>
+                            </tr>
+                            </thead>
+                            <tbody>
                             {this.state.dbPalindromes.palindromes
                                 .filter(pal => this.evaluatePalFilter(pal.raw))
+                                .slice().sort((a, b) => this.comparePals(a, b))
                                 .map((item, key) =>
-                                    <li className={"list-item no-margin " + this.palindromeClass(item.raw)}
-                                        key={item.id}>
-                                        <input
-                                            type="checkbox"
-                                            name="listitems"
-                                            checked={item.selected}
-                                            onChange={this.handleChecked}
-                                            value={item.id}
-                                            className={"checkbox"}
-                                        />
-                                        <span>{item.raw}</span>
-                                    </li>
+                                    <tr key={key}>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                name="listitems"
+                                                checked={item.selected}
+                                                onChange={this.handleChecked}
+                                                value={item.id}
+                                                className={"checkbox"}
+                                            />
+                                        </td>
+                                        <td className={"list-item no-margin " + this.palindromeClass(item.raw)}>
+                                            <span>{item.raw}</span>
+                                        </td>
+                                        <td>
+                                            <span>{item.createTime.toLocaleString()}</span>
+                                        </td>
+                                    </tr>
                                 )}
-                        </ol>
+                            </tbody>
+                        </table>
                     </div>
 
                     <div>
@@ -358,10 +430,19 @@ class Palindrome extends React.Component {
                                 Only Non-palindromes
                             </label>
                         </div>
+                        <button className="pal-button" onClick = {this.deleteSelected} >
+                            Delete Selected
+                        </button>
+
                     </div>
                 </div>
             </div>
         );
+    }
+
+
+    comparePals  = ( a, b) => {
+        return b.createTime - a.createTime;
     }
 
     reverseString(str) {

@@ -1,6 +1,7 @@
 //import * as firebase from 'firebase';
 
 const firebase = require("firebase/app");
+
 // Required for side-effects
 require("firebase/firestore");
 
