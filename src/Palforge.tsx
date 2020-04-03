@@ -1,38 +1,33 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from "react";
+import {render} from "react-dom";
 import './index.css';
 import firebase from './firebase.js'
 import {firestore} from "firebase";
-
-// import * as firebase from 'firebase/app';
-// import 'firebase/firestore';
-
-
-// import firebase from 'firebase/app';
-// import 'firebase/firestore';
-
-
-
 // const firebase = require('firebase/app');
-// require('firebase/firestore');
+// require('firebase/<PACKAGE>');
 
-
-//import {Timestamp} from "@firebase/firestore/dist/src/api/timestamp"; // <------  import firebase
-
-// import app from 'firebase/app';
+// // ES Modules:
+//     import firebase from 'firebase/app';
 // import 'firebase/auth';
-//import 'firebase/firestore';
+//
+// // Typescript:
+//     import * as firebase from 'firebase/app';
 
-// import 'firebase/messaging';
-// import { rootCollection, field, timestamp, Entity, ITimestamp } from 'firebase-firestorm';
-// import * as firestorm from 'firebase-firestorm';
-// import 'reflect-metadata';
+import "firebase/auth";
+import {
+    FirebaseAuthProvider,
+    FirebaseAuthConsumer
+} from "@react-firebase/auth";
 
-
-
-// import { rootCollection, field, timestamp, Entity, ITimestamp } from 'firebase-firestorm';
+// import {config} from "firebase" ;//"./firebase.js";
 
 var db = firebase.firestore();
+
+
+const IDontCareAboutFirebaseAuth = () => {
+    return <div>This part won't react to firebase auth changes</div>;
+};
+
 
 /**
  * Component to accept input with button hooks to parent <Palindrome/> to:
@@ -42,7 +37,25 @@ var db = firebase.firestore();
  * clear storage
  *
  * */
-class TextInput extends React.Component {
+interface ITextInputState {
+    text?: string;
+    isPalindrome?: boolean;
+
+}
+
+interface ITextInputProps {
+    onChange(name: string): any;
+
+    checkPalindrome(name: string): any;
+
+    reverseText(name: string): any;
+
+    saveText(name: string): any;
+
+    // clearSaved(): any;
+}
+
+class TextInput extends React.Component<ITextInputProps, ITextInputState> {
     constructor(props) {
         super(props);
         this.state = {
@@ -51,11 +64,12 @@ class TextInput extends React.Component {
         }
     }
 
+
     onChange = (e) => {
         const value = e.target.value;
         this.props.onChange(value);
         const isPal = this.props.checkPalindrome(value);
-        this.setState( () => ({
+        this.setState(() => ({
             text: value,
             isPalindrome: isPal,
         }));
@@ -64,52 +78,54 @@ class TextInput extends React.Component {
 
     reverseText = () => {
         const flipped = this.props.reverseText(this.state.text);
-        this.setState( () => ({
+        this.setState(() => ({
             text: flipped,
         }));
     }
 
     checkPalindrome = () => {
         return this.props.checkPalindrome(this.state.text);
-     }
+    }
 
     saveText = () => {
         const saved = this.props.saveText(this.state.text);
-        this.setState( () => ({
+        this.setState(() => ({
             text: saved,
         }));
     }
 
-    clearSaved = () => {
-        const saveText = this.state.text;
-        this.props.clearSaved();
-        this.setState( () => ({
-            text: saveText,
-        }));
-    }
+    // clearSaved = () => {
+    //     const saveText = this.state.text;
+    //     this.props.clearSaved();
+    //     this.setState(() => ({
+    //         text: saveText,
+    //     }));
+    // }
 
     render() {
         return (
 
             <div>
                 <div>
-                    <textarea  className="palindrome-input" onChange={this.onChange.bind(this)}
-                               value  = {this.state.text} />
+                    <textarea className="palindrome-input" onChange={this.onChange.bind(this)}
+                              value={this.state.text}/>
                 </div>
                 {this.state.isPalindrome &&
-                <div className={"palindrome-status is-pal"}><span role="img" aria-label={"smiley"} className={"even-smaller"}>&#128540;</span> palindrome </div>}
+                <div className={"palindrome-status is-pal"}><span role="img" aria-label={"smiley"}
+                                                                  className={"even-smaller"}>&#128540;</span> palindrome
+                </div>}
                 {!this.state.isPalindrome &&
                 <div className={"palindrome-status not-pal"}><span>not</span> palindrome </div>}
                 <div>
-                    <button className="pal-button" onClick = {this.reverseText.bind(this)} >
+                    <button className="pal-button" onClick={this.reverseText.bind(this)}>
                         Reverse input
                     </button>
-                    <button className="pal-button" onClick = {this.saveText.bind(this)} >
+                    <button className="pal-button" onClick={this.saveText.bind(this)}>
                         Save
                     </button>
-                    <button className="pal-button" onClick = {this.clearSaved.bind(this)} >
-                        Clear saved
-                    </button>
+                    {/*<button className="pal-button" onClick={this.clearSaved.bind(this)}>*/}
+                    {/*    Clear saved*/}
+                    {/*</button>*/}
                 </div>
             </div>
 
@@ -117,6 +133,33 @@ class TextInput extends React.Component {
     }
 }
 
+interface IDbPalindrome {
+    "raw": string;
+    "cooked": string;
+    id: string;
+    selected: boolean;
+    createTime: number;
+}
+
+interface IPalindromeState {
+    palindrome: string;
+    // savedPalsString: string;
+    // savedPals: string[];
+    dbPalindromes: {
+        palindromes: IDbPalindrome[];
+    };
+    palfilter: string;
+    allNone: boolean;
+
+}
+
+interface IPalindromeProps {
+    // onChange(name: string): any;
+    // checkPalindrome(name: string): any;
+    // reverseText(name: string): any;
+    // saveText(name: string): any;
+    // clearSaved(): any;
+}
 
 /**
  * Component to create palindromes, with visual aids to
@@ -127,25 +170,22 @@ class TextInput extends React.Component {
  * clear storage
  *
  * */
-class Palindrome extends React.Component {
+class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     constructor(props) {
         super(props);
-        const loaded = this.load();
         this.state = {
             palindrome: "",
-            savedPalsString: !loaded ? "" : loaded,
-            savedPals: !loaded ? [] : JSON.parse(loaded),
-            dbPalindromes: {"palindromes" : []},
+            dbPalindromes: {"palindromes": []},
             palfilter: "all",
             allNone: false
         }
-     }
+    }
 
     componentDidMount() {
         this.reloadFromDb();
 
 
-     }
+    }
 
     reloadFromDb() {
         var thePalindromes = {"palindromes": []};
@@ -155,7 +195,7 @@ class Palindrome extends React.Component {
                 var theRaw = `${doc.data().raw}`;
                 var theCooked = `${doc.data().cooked}`;
                 var theId = `${doc.id}`;
-                var theCreateTime = new Date(`${doc.data().createTime.seconds}`*1000);
+                var theCreateTime = new Date(1000 * Number(`${doc.data().createTime.seconds}`));
                 thePalindromes.palindromes.push({
                     "raw": theRaw,
                     "cooked": theCooked,
@@ -171,18 +211,19 @@ class Palindrome extends React.Component {
         });
         return thePalindromes;
     }
+
     //console.log("byId? " + JSON.stringify(thePalindromes.palindromes.filter(obj => obj.id === "0OMgK4Bd5cFLa8pw5O4m")));
 
 
     onChange = (value) => {
-        this.setState( () => ({
+        this.setState(() => ({
             palindrome: value,
         }));
     }
     reverseText = (str) => {
 
         const flipped = this.reverseString(str);
-        this.setState( () => ({
+        this.setState(() => ({
             palindrome: flipped,
         }));
         return flipped;
@@ -196,16 +237,6 @@ class Palindrome extends React.Component {
             return "";
         }
 
-        const saveStr = str;
-        let savedCopy = this.state.savedPals.slice();
-        savedCopy.push({"key" : Date.now(), "pal":  saveStr});
-        let saveString = JSON.stringify(savedCopy);
-        this.setState( () => ({
-            savedPals: savedCopy,
-            savedPalsString: saveString,
-        }));
-
-        this.persist(saveString);
         this.addToDb(str);
         this.reloadFromDb();
         return str;
@@ -213,17 +244,17 @@ class Palindrome extends React.Component {
 
     deleteSelected = () => {
         var selected = this.state.dbPalindromes.palindromes.filter(pal => pal.selected);
-       selected.map(pal => {
-           this.deleteDocument(pal);
-           return pal;
-       });
-       this.reloadFromDb();
+        selected.map(pal => {
+            this.deleteDocument(pal);
+            return pal;
+        });
+        this.reloadFromDb();
     };
 
     deleteDocument = (pal) => {
-            db.collection("/palindromes").doc(pal.id).delete().then(function() {
+        db.collection("/palindromes").doc(pal.id).delete().then(function () {
             console.log("Palindrome successfully deleted " + JSON.stringify(pal));
-        }).catch(function(error) {
+        }).catch(function (error) {
             console.error("Error removing document: ", error);
         });
     }
@@ -234,21 +265,13 @@ class Palindrome extends React.Component {
             cooked: this.normalizeString(str),
             createTime: firestore.Timestamp.fromDate(new Date())
         })
-            .then(function(docRef) {
+            .then(function (docRef) {
                 console.log("Document written with ID: ", docRef.id);
             })
-            .catch(function(error) {
+            .catch(function (error) {
                 console.error("Error adding document: ", error);
             });
 
-    }
-
-        clearSaved = () => {
-        this.setState( () => ({
-            savedPals: [],
-            savedPalsString: "",
-        }));
-        this.persist("");
     }
 
     evaluatePalFilter = (str) => {
@@ -264,11 +287,10 @@ class Palindrome extends React.Component {
         }
     };
 
-
     handleChecked = (event) => {
         var docId = event.target.value;
         var thePalindromes = this.state.dbPalindromes.palindromes.slice();
-        var position = thePalindromes.findIndex(function(element, index, array) {
+        var position = thePalindromes.findIndex(function (element, index, array) {
             return element.id === docId
         });
 
@@ -301,7 +323,7 @@ class Palindrome extends React.Component {
         let haveInput = this.state.palindrome.length > 0;
         let smoothedParts = this.smooth(this.state.palindrome);
         let smoothHtml = [];
-        smoothHtml.push(<span key={Date.now()}>{smoothedParts[0]}</span>,
+        smoothHtml.push(<span>{smoothedParts[0]}</span>,
             <span className="midpoint">{smoothedParts[1]}</span>,
             <span>{smoothedParts[2]}</span>);
 
@@ -315,30 +337,20 @@ class Palindrome extends React.Component {
                         onChange={this.onChange.bind(this)}
                         reverseText={this.reverseText.bind(this)}
                         saveText={this.saveText.bind(this)}
-                        clearSaved={this.clearSaved.bind(this)}
+                        // clearSaved={this.clearSaved.bind(this)}
                         checkPalindrome={this.checkPalindrome.bind(this)}
                     />
                 </div>
                 {haveInput &&
                 <div>
                     <div>Input as typed:</div>
-                    <div className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{this.state.palindrome} </div>
+                    <div
+                        className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{this.state.palindrome} </div>
                     <div>Reversed input: (Turnaround is <strong>{smoothedParts[1]}</strong>)</div>
-                    <div className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothHtml}</div>
+                    <div
+                        className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothHtml}</div>
                 </div>}
 
-                    {this.state.savedPals.length > 0 &&
-                    <div>
-                        <div>Saved Palindromes</div>
-                        <div className="indent">
-
-                            <ol className={"list section-border"}>
-                                {this.state.savedPals.map((item, key) =>
-                                    <li className={"list-item " + this.palindromeClass(item.pal) } key={item.key}>{item.pal}</li>)}
-
-                            </ol>
-                        </div>
-                    </div>}
                 <div>
                     <div>
                         <div>DB palindromes:</div>
@@ -430,7 +442,7 @@ class Palindrome extends React.Component {
                                 Only Non-palindromes
                             </label>
                         </div>
-                        <button className="pal-button" onClick = {this.deleteSelected} >
+                        <button className="pal-button" onClick={this.deleteSelected}>
                             Delete Selected
                         </button>
 
@@ -440,14 +452,14 @@ class Palindrome extends React.Component {
         );
     }
 
-
-    comparePals  = ( a, b) => {
+    comparePals = (a, b) => {
         return b.createTime - a.createTime;
     }
 
     reverseString(str) {
         return str.split("").reverse().join("");
     }
+
     /** Removes whitespace, punctuation and diacriticals, then formats with one space between uppercase characters
      * I have found this to be the easiest format for the eye to pick up on word patterns.
      * */
@@ -455,11 +467,12 @@ class Palindrome extends React.Component {
         return this.stripWhiteSpace(this.stripPunctuation(this.stripDiacriticals(str))).toUpperCase()
             .split("").join(" ");
     }
-/**
- * Strips all diacriticals (accented or decorated characters) by separating the parts, and removing the non-alphanumeric.
- * TODO: Known issues - "ß" which ends up as "ss" not "s" and æ which ends up as "ae" and perhaps some other similar
- *
- * */
+
+    /**
+     * Strips all diacriticals (accented or decorated characters) by separating the parts, and removing the non-alphanumeric.
+     * TODO: Known issues - "ß" which ends up as "ss" not "s" and æ which ends up as "ae" and perhaps some other similar
+     *
+     * */
     stripDiacriticals(str) {
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
@@ -497,14 +510,14 @@ class Palindrome extends React.Component {
      * 2. revese string
      * 3. return array with three strings: before the midpoint, the midpoint or turnaround string, after the midpoint
      * */
-    smooth (str) {
+    smooth(str) {
         var smooth = this.reverseString(this.normalizeString(str));
-        var nChars = (smooth.length+1)/2;
+        var nChars = (smooth.length + 1) / 2;
         var turnaroundSize = ((nChars % 2) === 0 ? 4 : 3);
         var parts = [];
-        parts.push(smooth.substring(0, nChars - turnaroundSize ));
-        parts.push(smooth.substring(nChars - turnaroundSize , (nChars - turnaroundSize) + turnaroundSize*2 ));
-        parts.push(smooth.substring((nChars - turnaroundSize) + turnaroundSize*2 ));
+        parts.push(smooth.substring(0, nChars - turnaroundSize));
+        parts.push(smooth.substring(nChars - turnaroundSize, (nChars - turnaroundSize) + turnaroundSize * 2));
+        parts.push(smooth.substring((nChars - turnaroundSize) + turnaroundSize * 2));
 
         return parts;
     }
@@ -515,25 +528,8 @@ class Palindrome extends React.Component {
      *  TODO: separate concerns better
      * @returns {string | representing the color class to use for formatting}
      */
-    palindromeClass (str) {
+    palindromeClass(str) {
         return str ? (this.isPalindrome(str) ? "is-pal" : "not-pal") : "";
-    }
-
-    /**
-     * hook for persistence
-     * TODO: change to use real database instead of localStorage
-     * @returns {string | string}
-     */
-    load = () => {
-        return localStorage.getItem("savedPals") || "";
-    }
-
-    /**
-     * hook for persistence
-     * TODO: change to use real database instead of localStorage
-     * @returns {string | string}
-     */    persist = (str) => {
-        return localStorage.setItem("savedPals", str);
     }
 }
 
@@ -542,22 +538,13 @@ class Palindrome extends React.Component {
  * Main cllass to contain the working part(s)
  */
 class Palforge extends React.Component {
-    // constructor(props) {
-    //     super(props);
-    // }
-
     render() {
-
         return (
             <div>
                 <div>
-                    <h3>The Palindrome Forge<br/>
-
-                    <span className={"emoji even-smaller"} role="img" aria-label={"copyright"}>
-                            &copy;2020 Greg Pontecorvo. All rites observed.</span> </h3>
-                </div>
-                <div className="palforge">
-                    <Palindrome/>
+                    <div className="palforge">
+                        <Palindrome/>
+                    </div>
                 </div>
             </div>
         );
@@ -565,8 +552,10 @@ class Palforge extends React.Component {
 }
 
 // ========================================
+export default Palforge;
 
-ReactDOM.render(
-    <Palforge/>,
-    document.getElementById('root')
-);
+// @ts-ignore
+// ReactDOM.render(
+//     <Palforge/>,
+//     document.getElementById('root')
+// );
