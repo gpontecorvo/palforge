@@ -391,10 +391,10 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                             />
                                         </td>
                                         <td className={"list-item no-margin " + this.palindromeClass(item.raw)}>
-                                            <span>{item.raw}</span>
+                                            {item.raw}
                                         </td>
                                         <td>
-                                            <span>{item.createTime.toLocaleString()}</span>
+                                           {item.createTime.toLocaleString()}
                                         </td>
                                     </tr>
                                 )}

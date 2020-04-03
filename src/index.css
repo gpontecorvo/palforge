@@ -130,3 +130,10 @@ div .no-margin {
    display: inline-block;
    margin: 7px;
  }
+
+.profileImg {
+  height: 60px;
+  display: inline-block;
+  float: left;
+  margin: 3px;
+}
