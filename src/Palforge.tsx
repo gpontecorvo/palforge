@@ -23,15 +23,6 @@ import {
 
 var db = firebase.firestore();
 
-// class names for direction indicator
-const ARROW_UP = "arrow-up";
-const ARROW_DOWN = "arrow-down";
-const SEEN = "seen";
-const NOT_SEEN = "not-seen";
-const DIRECTION_IND = "direction-ind";
-const OVERLAY = "overlay";
-const ARROW_UP_CLASSES_INIT = [ARROW_UP, DIRECTION_IND, NOT_SEEN, OVERLAY].join(" ");
-const ARROW_DOWN_CLASSES_INIT = [ARROW_DOWN, DIRECTION_IND, NOT_SEEN, OVERLAY].join(" ");
 
 const IDontCareAboutFirebaseAuth = () => {
     return <div>This part won't react to firebase auth changes</div>;
@@ -39,95 +30,123 @@ const IDontCareAboutFirebaseAuth = () => {
 
 
 interface IColumnClickDisplayState {
+    sortInfo: {
+        sortCol: string;
+        sortDesc: boolean;
+    }
 }
 
 interface IColumnClickDisplayProps {
     handleSortOrder(name: string): any;
+
     columnId: string;
     headerText: string;
     markerClass: string;
-    initialSort?: boolean;
+    initialSort?: {
+        sortInfo: {
+            sortCol: string;
+            sortDesc: boolean;
+        }
+    };
 }
 
 
-class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColumnClickDisplayState>{
+class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColumnClickDisplayState> {
+    constructor(props) {
+        super(props);
+        this.state = {
+            sortInfo: props.initialSort ? props.initialSort.sortInfo : {
+                sortCol: "",
+                sortDesc: false
+            }
+        }
+    }
+
     // class names for direction indicator: these must exist in CSS
     ARROW_UP = "arrow-up";
     ARROW_DOWN = "arrow-down";
     SEEN = "seen";
     NOT_SEEN = "not-seen";
     OVERLAY = "overlay";
-    ARROW_UP_CLASSES_INIT = [ARROW_UP, NOT_SEEN, OVERLAY].join(" ");
-    ARROW_DOWN_CLASSES_INIT = [ARROW_DOWN, NOT_SEEN, OVERLAY].join(" ");
+    ARROW_UP_CLASSES_INIT_NOT_SEEN = [this.ARROW_UP, this.NOT_SEEN, this.OVERLAY].join(" ");
+    ARROW_DOWN_CLASSES_INIT_NOT_SEEN = [this.ARROW_DOWN, this.NOT_SEEN, this.OVERLAY].join(" ");
+    ARROW_UP_CLASSES_INIT_SEEN = [this.ARROW_UP, this.SEEN, this.OVERLAY].join(" ");
+    ARROW_DOWN_CLASSES_INIT_SEEN = [this.ARROW_DOWN, this.SEEN, this.OVERLAY].join(" ");
 
     handleSortOrder = (e) => {
         // ask the parent for sortInfo
         var sortInfo = this.props.handleSortOrder(e);
         this.displayTheArrows(sortInfo);
+        this.setState({
+            sortInfo: sortInfo
+        });
     };
 
-    // componentDidMount(): void {
-        // console.log(this.props);
-        // if (this.props.initialSort) {
-
-            //document.getElementById(this.props.columnId).click();
-            // this.clickMe(document.getElementById(this.props.columnId));
-            // var sortInfo = {
-            //     sortInfo: {
-            //         sortCol: this.props.columnId,
-            //         sortDesc: false
-            //     }
-            // };
-            // this.displayTheArrows(sortInfo);
-            // this.forceUpdate();
-        // }
-    // }
+    componentDidMount(): void {
+        this.setState({
+                sortInfo: this.props.initialSort ? this.props.initialSort.sortInfo : {
+                    sortCol: "",
+                    sortDesc: false
+                }
+            }
+        )
+    }
 
     displayTheArrows(sortInfo) {
         let allHeaderElements = document.getElementsByClassName(this.props.markerClass);
 
         Array.from(allHeaderElements)
             .forEach((theElement) => {
-            var theClasses = theElement.classList.value.split(/\s+/);
-            if (theElement.parentElement.id == sortInfo.sortCol) {
-                               // console.log(theClasses);
-                if (theClasses.findIndex((aClass) => aClass == ARROW_UP) != -1) {
-                    var visIndex = theClasses.findIndex((aClass) => aClass == (sortInfo.sortDesc ? SEEN : NOT_SEEN));
-                    if (visIndex != -1) {
-                        theClasses[visIndex] = (sortInfo.sortDesc ? NOT_SEEN : SEEN);
-                        theElement.classList.value = theClasses.join(" ");
+                var theClasses = theElement.classList.value.split(/\s+/);
+                // console.log("\n------------\ntheClasses ", theClasses, " sortInfo ", sortInfo )
+                if (theElement.parentElement.id == sortInfo.sortCol) {
+                    if (theClasses.findIndex((aClass) => aClass == this.ARROW_UP) != -1) {
+                        // console.log("here 1 - ArrowUp");
+                        var visIndex = theClasses.findIndex((aClass) => aClass == (sortInfo.sortDesc ? this.NOT_SEEN: this.SEEN ));
+                        if (visIndex != -1) {
+                            // console.log("here 2");
+                            theClasses[visIndex] = (sortInfo.sortDesc ? this.NOT_SEEN : this.SEEN);
+                            theElement.classList.value = theClasses.join(" ");
+                        }
+                    } else if (theClasses.findIndex((aClass) => aClass == this.ARROW_DOWN) != -1) {
+                        // console.log("here 3 - ArroDown");
+                        var visIndex = theClasses.findIndex((aClass) => aClass == (!sortInfo.sortDesc ? this.SEEN : this.NOT_SEEN));
+                        if (visIndex != -1) {
+                            // console.log("here 4");
+                            theClasses[visIndex] = (sortInfo.sortDesc ? this.SEEN : this.NOT_SEEN);
+                            theElement.classList.value = theClasses.join(" ");
+                        }
                     }
-                } else if (theClasses.findIndex((aClass) => aClass == ARROW_DOWN) != -1) {
-                    var visIndex = theClasses.findIndex((aClass) => aClass == (!sortInfo.sortDesc ? SEEN : NOT_SEEN));
+                } else {
+                    // console.log("here 5");
+                    var visIndex = theClasses.findIndex((aClass) => aClass == this.SEEN);
                     if (visIndex != -1) {
-                        theClasses[visIndex] = (!sortInfo.sortDesc ? NOT_SEEN : SEEN);
+                        // console.log("here 6");
+                        theClasses[visIndex] = this.NOT_SEEN;
                         theElement.classList.value = theClasses.join(" ");
                     }
                 }
-            } else {
-                var visIndex = theClasses.findIndex((aClass) => aClass == SEEN);
-                if (visIndex != -1) {
-                    theClasses[visIndex] = NOT_SEEN;
-                    theElement.classList.value = theClasses.join(" ");
-                }
-            }
-        });
+                console.log("\n------------\n " );
+
+            });
     }
-    clickMe (el) {
-        el.click()
-    }
+
     render() {
+
+        var sortInfo = this.state.sortInfo;
+ //       console.log("sortinfo ", sortInfo);
         return (
-            <th id={this.props.columnId} onClick={this.handleSortOrder.bind(this)} >
+            <th id={this.props.columnId} onClick={this.handleSortOrder.bind(this)}>
                 {this.props.headerText}&nbsp;
-                {/*add in the marker class to allow multiple sorters in the DOM*/}
-                <span className={ARROW_UP_CLASSES_INIT + " " + this.props.markerClass}/>
-                <span className={ARROW_DOWN_CLASSES_INIT + " " + this.props.markerClass}/>
+
+                <span
+                    className={((sortInfo.sortCol == this.props.columnId && !sortInfo.sortDesc) ? this.ARROW_UP_CLASSES_INIT_SEEN : this.ARROW_UP_CLASSES_INIT_NOT_SEEN) + " " + this.props.markerClass}/>
+                <span
+                    className={((sortInfo.sortCol == this.props.columnId && sortInfo.sortDesc) ? this.ARROW_DOWN_CLASSES_INIT_SEEN : this.ARROW_DOWN_CLASSES_INIT_NOT_SEEN) + " " + this.props.markerClass}/>
             </th>
         );
     }
 }
-
 
 
 /**
@@ -145,8 +164,11 @@ interface ITextInputState {
 
 interface ITextInputProps {
     onChange(name: string): any;
+
     checkPalindrome(name: string): any;
+
     reverseText(name: string): any;
+
     saveText(name: string): any;
 }
 
@@ -159,7 +181,7 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
         }
     }
 
-   onChange = (e) => {
+    onChange = (e) => {
         const value = e.target.value;
         this.props.onChange(value);
         const isPal = this.props.checkPalindrome(value);
@@ -197,10 +219,10 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
                               value={this.state.text}/>
                 </div>
                 {
-                        this.state.isPalindrome &&
-                        <div className={"palindrome-status is-pal"}>
-                            <span role="img" aria-label={"smiley"} className={"even-smaller"}>&#128540;</span> palindrome
-                        </div>
+                    this.state.isPalindrome &&
+                    <div className={"palindrome-status is-pal"}>
+                        <span role="img" aria-label={"smiley"} className={"even-smaller"}>&#128540;</span> palindrome
+                    </div>
                 }
                 {
                     !this.state.isPalindrome &&
@@ -243,6 +265,12 @@ interface IPalindromeState {
 }
 
 interface IPalindromeProps {
+    initialSort: {
+        sortInfo: {
+            sortCol: string;
+            sortDesc: boolean;
+        }
+    }
 }
 
 /**
@@ -263,7 +291,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             palfilter: "all",
             allNone: false,
             sortInfo: {
-                sortCol: "entryColumn",
+                sortCol: "",
                 sortDesc: false
             }
         }
@@ -271,6 +299,10 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
 
     componentDidMount() {
         this.reloadFromDb();
+        this.setState({
+            sortInfo: this.props.initialSort.sortInfo
+        });
+
     }
 
     reloadFromDb() {
@@ -345,7 +377,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         }).catch(function (error) {
             console.error("Error removing document: ", error);
         });
-    }
+    };
 
     addToDb = (str) => {
         db.collection("palindromes").add({
@@ -429,8 +461,8 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         let smoothedParts = this.smooth(this.state.palindrome);
         let smoothHtml = [];
         smoothHtml.push(<span>{smoothedParts[0]}</span>,
-            <span  className="midpoint">{smoothedParts[1]}</span>,
-            <span >{smoothedParts[2]}</span>);
+            <span className="midpoint">{smoothedParts[1]}</span>,
+            <span>{smoothedParts[2]}</span>);
 
         return (
             <div>
@@ -524,9 +556,8 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                 <ColumnClickDisplay
                                     handleSortOrder={this.handleSortOrder}
                                     columnId={"entryColumn"}
-                                     headerText={"Entry"}
-                                     markerClass={"palListSorter"}
-                                    initialSort={true}
+                                    headerText={"Entry"}
+                                    markerClass={"palListSorter"}
                                 />
                                 {/*<th id="entryColumn" onClick={this.handleSortOrder}>*/}
                                 {/*    Entry <span*/}
@@ -588,7 +619,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                         </table>
                     </div>
 
-                 </div>
+                </div>
             </div>
         );
     }
@@ -596,15 +627,15 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     comparePals = (a, b) => {
         switch (this.state.sortInfo.sortCol) {
             case "createdColumn":
-                return this.state.sortInfo.sortDesc ? b.createTime - a.createTime: a.createTime - b.createTime;
+                return this.state.sortInfo.sortDesc ? b.createTime - a.createTime : a.createTime - b.createTime;
             case "entryColumn":
-                return this.state.sortInfo.sortDesc ? b.raw.localeCompare(a.raw): a.raw.localeCompare(b.raw);
+                return this.state.sortInfo.sortDesc ? b.raw.localeCompare(a.raw) : a.raw.localeCompare(b.raw);
             case "uidColumn":
-                return this.state.sortInfo.sortDesc ? b.user.localeCompare(a.user): a.user.localeCompare(b.user);
+                return this.state.sortInfo.sortDesc ? b.user.localeCompare(a.user) : a.user.localeCompare(b.user);
             default:
                 return 0;
         }
-     }
+    };
 
     reverseString(str) {
         return str.split("").reverse().join("");
@@ -689,11 +720,19 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
  */
 class Palforge extends React.Component {
     render() {
+        let initialSort = {
+            sortInfo: {
+                sortCol: "entryColumn",
+                sortDesc: false
+            }
+        };
         return (
             <div>
                 <div>
                     <div className="palforge">
-                        <Palindrome/>
+                        <Palindrome
+                            initialSort={initialSort}
+                        />
                     </div>
                 </div>
             </div>
