@@ -137,3 +137,40 @@ div .no-margin {
   float: left;
   margin: 3px;
 }
+table, td, th {
+  border: thin black solid;
+  border-collapse: collapse;
+  padding: 3px 5px;
+}
+.arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+
+  border-bottom: 7px solid black;
+}
+
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+
+  border-top: 7px solid #000;
+}
+
+.seen {
+  display: inline-block;
+}
+
+.not-seen {
+   display: none;
+ }
+
+.overlay {
+  height:0px;
+  overflow:visible;
+  pointer-events:none;
+  background:none !important;
+}

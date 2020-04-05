@@ -23,10 +23,111 @@ import {
 
 var db = firebase.firestore();
 
+// class names for direction indicator
+const ARROW_UP = "arrow-up";
+const ARROW_DOWN = "arrow-down";
+const SEEN = "seen";
+const NOT_SEEN = "not-seen";
+const DIRECTION_IND = "direction-ind";
+const OVERLAY = "overlay";
+const ARROW_UP_CLASSES_INIT = [ARROW_UP, DIRECTION_IND, NOT_SEEN, OVERLAY].join(" ");
+const ARROW_DOWN_CLASSES_INIT = [ARROW_DOWN, DIRECTION_IND, NOT_SEEN, OVERLAY].join(" ");
 
 const IDontCareAboutFirebaseAuth = () => {
     return <div>This part won't react to firebase auth changes</div>;
 };
+
+
+interface IColumnClickDisplayState {
+}
+
+interface IColumnClickDisplayProps {
+    handleSortOrder(name: string): any;
+    columnId: string;
+    headerText: string;
+    markerClass: string;
+    initialSort?: boolean;
+}
+
+
+class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColumnClickDisplayState>{
+    // class names for direction indicator: these must exist in CSS
+    ARROW_UP = "arrow-up";
+    ARROW_DOWN = "arrow-down";
+    SEEN = "seen";
+    NOT_SEEN = "not-seen";
+    OVERLAY = "overlay";
+    ARROW_UP_CLASSES_INIT = [ARROW_UP, NOT_SEEN, OVERLAY].join(" ");
+    ARROW_DOWN_CLASSES_INIT = [ARROW_DOWN, NOT_SEEN, OVERLAY].join(" ");
+
+    handleSortOrder = (e) => {
+        // ask the parent for sortInfo
+        var sortInfo = this.props.handleSortOrder(e);
+        this.displayTheArrows(sortInfo);
+    };
+
+    // componentDidMount(): void {
+        // console.log(this.props);
+        // if (this.props.initialSort) {
+
+            //document.getElementById(this.props.columnId).click();
+            // this.clickMe(document.getElementById(this.props.columnId));
+            // var sortInfo = {
+            //     sortInfo: {
+            //         sortCol: this.props.columnId,
+            //         sortDesc: false
+            //     }
+            // };
+            // this.displayTheArrows(sortInfo);
+            // this.forceUpdate();
+        // }
+    // }
+
+    displayTheArrows(sortInfo) {
+        let allHeaderElements = document.getElementsByClassName(this.props.markerClass);
+
+        Array.from(allHeaderElements)
+            .forEach((theElement) => {
+            var theClasses = theElement.classList.value.split(/\s+/);
+            if (theElement.parentElement.id == sortInfo.sortCol) {
+                               // console.log(theClasses);
+                if (theClasses.findIndex((aClass) => aClass == ARROW_UP) != -1) {
+                    var visIndex = theClasses.findIndex((aClass) => aClass == (sortInfo.sortDesc ? SEEN : NOT_SEEN));
+                    if (visIndex != -1) {
+                        theClasses[visIndex] = (sortInfo.sortDesc ? NOT_SEEN : SEEN);
+                        theElement.classList.value = theClasses.join(" ");
+                    }
+                } else if (theClasses.findIndex((aClass) => aClass == ARROW_DOWN) != -1) {
+                    var visIndex = theClasses.findIndex((aClass) => aClass == (!sortInfo.sortDesc ? SEEN : NOT_SEEN));
+                    if (visIndex != -1) {
+                        theClasses[visIndex] = (!sortInfo.sortDesc ? NOT_SEEN : SEEN);
+                        theElement.classList.value = theClasses.join(" ");
+                    }
+                }
+            } else {
+                var visIndex = theClasses.findIndex((aClass) => aClass == SEEN);
+                if (visIndex != -1) {
+                    theClasses[visIndex] = NOT_SEEN;
+                    theElement.classList.value = theClasses.join(" ");
+                }
+            }
+        });
+    }
+    clickMe (el) {
+        el.click()
+    }
+    render() {
+        return (
+            <th id={this.props.columnId} onClick={this.handleSortOrder.bind(this)} >
+                {this.props.headerText}&nbsp;
+                {/*add in the marker class to allow multiple sorters in the DOM*/}
+                <span className={ARROW_UP_CLASSES_INIT + " " + this.props.markerClass}/>
+                <span className={ARROW_DOWN_CLASSES_INIT + " " + this.props.markerClass}/>
+            </th>
+        );
+    }
+}
+
 
 
 /**
@@ -40,19 +141,13 @@ const IDontCareAboutFirebaseAuth = () => {
 interface ITextInputState {
     text?: string;
     isPalindrome?: boolean;
-
 }
 
 interface ITextInputProps {
     onChange(name: string): any;
-
     checkPalindrome(name: string): any;
-
     reverseText(name: string): any;
-
     saveText(name: string): any;
-
-    // clearSaved(): any;
 }
 
 class TextInput extends React.Component<ITextInputProps, ITextInputState> {
@@ -64,8 +159,7 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
         }
     }
 
-
-    onChange = (e) => {
+   onChange = (e) => {
         const value = e.target.value;
         this.props.onChange(value);
         const isPal = this.props.checkPalindrome(value);
@@ -74,33 +168,25 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
             isPalindrome: isPal,
         }));
 
-    }
+    };
 
     reverseText = () => {
         const flipped = this.props.reverseText(this.state.text);
         this.setState(() => ({
             text: flipped,
         }));
-    }
+    };
 
     checkPalindrome = () => {
         return this.props.checkPalindrome(this.state.text);
-    }
+    };
 
     saveText = () => {
         const saved = this.props.saveText(this.state.text);
         this.setState(() => ({
             text: saved,
         }));
-    }
-
-    // clearSaved = () => {
-    //     const saveText = this.state.text;
-    //     this.props.clearSaved();
-    //     this.setState(() => ({
-    //         text: saveText,
-    //     }));
-    // }
+    };
 
     render() {
         return (
@@ -110,12 +196,16 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
                     <textarea className="palindrome-input" onChange={this.onChange.bind(this)}
                               value={this.state.text}/>
                 </div>
-                {this.state.isPalindrome &&
-                <div className={"palindrome-status is-pal"}><span role="img" aria-label={"smiley"}
-                                                                  className={"even-smaller"}>&#128540;</span> palindrome
-                </div>}
-                {!this.state.isPalindrome &&
-                <div className={"palindrome-status not-pal"}><span>not</span> palindrome </div>}
+                {
+                        this.state.isPalindrome &&
+                        <div className={"palindrome-status is-pal"}>
+                            <span role="img" aria-label={"smiley"} className={"even-smaller"}>&#128540;</span> palindrome
+                        </div>
+                }
+                {
+                    !this.state.isPalindrome &&
+                    <div className={"palindrome-status not-pal"}><span>not</span> palindrome </div>
+                }
                 <div>
                     <button className="pal-button" onClick={this.reverseText.bind(this)}>
                         Reverse input
@@ -123,42 +213,36 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
                     <button className="pal-button" onClick={this.saveText.bind(this)}>
                         Save
                     </button>
-                    {/*<button className="pal-button" onClick={this.clearSaved.bind(this)}>*/}
-                    {/*    Clear saved*/}
-                    {/*</button>*/}
                 </div>
             </div>
-
         );
     }
 }
 
 interface IDbPalindrome {
-    "raw": string;
-    "cooked": string;
+    raw: string;
+    cooked: string;
     id: string;
     selected: boolean;
     createTime: number;
+    user: string;
 }
 
 interface IPalindromeState {
     palindrome: string;
-    // savedPalsString: string;
-    // savedPals: string[];
     dbPalindromes: {
         palindromes: IDbPalindrome[];
     };
     palfilter: string;
     allNone: boolean;
+    sortInfo: {
+        sortCol: string;
+        sortDesc: boolean;
+    }
 
 }
 
 interface IPalindromeProps {
-    // onChange(name: string): any;
-    // checkPalindrome(name: string): any;
-    // reverseText(name: string): any;
-    // saveText(name: string): any;
-    // clearSaved(): any;
 }
 
 /**
@@ -177,14 +261,16 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             palindrome: "",
             dbPalindromes: {"palindromes": []},
             palfilter: "all",
-            allNone: false
+            allNone: false,
+            sortInfo: {
+                sortCol: "entryColumn",
+                sortDesc: false
+            }
         }
     }
 
     componentDidMount() {
         this.reloadFromDb();
-
-
     }
 
     reloadFromDb() {
@@ -194,6 +280,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             querySnapshot.forEach((doc) => {
                 var theRaw = `${doc.data().raw}`;
                 var theCooked = `${doc.data().cooked}`;
+                var theUser = `${doc.data().user}`;
                 var theId = `${doc.id}`;
                 var theCreateTime = new Date(1000 * Number(`${doc.data().createTime.seconds}`));
                 thePalindromes.palindromes.push({
@@ -201,7 +288,8 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                     "cooked": theCooked,
                     id: theId,
                     selected: false,
-                    createTime: theCreateTime
+                    createTime: theCreateTime,
+                    user: theUser
                 });
             });
             // console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
@@ -214,23 +302,23 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
 
     //console.log("byId? " + JSON.stringify(thePalindromes.palindromes.filter(obj => obj.id === "0OMgK4Bd5cFLa8pw5O4m")));
 
-
     onChange = (value) => {
         this.setState(() => ({
             palindrome: value,
         }));
-    }
-    reverseText = (str) => {
+    };
 
+    reverseText = (str) => {
         const flipped = this.reverseString(str);
         this.setState(() => ({
             palindrome: flipped,
         }));
         return flipped;
-    }
+    };
+
     checkPalindrome = (str) => {
         return this.isPalindrome(str);
-    }
+    };
 
     saveText = (str) => {
         if (!str) {
@@ -240,7 +328,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         this.addToDb(str);
         this.reloadFromDb();
         return str;
-    }
+    };
 
     deleteSelected = () => {
         var selected = this.state.dbPalindromes.palindromes.filter(pal => pal.selected);
@@ -263,7 +351,8 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         db.collection("palindromes").add({
             raw: str,
             cooked: this.normalizeString(str),
-            createTime: firestore.Timestamp.fromDate(new Date())
+            createTime: firestore.Timestamp.fromDate(new Date()),
+            user: firebase.auth().currentUser.uid,
         })
             .then(function (docRef) {
                 console.log("Document written with ID: ", docRef.id);
@@ -272,16 +361,15 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 console.error("Error adding document: ", error);
             });
 
-    }
+    };
 
     evaluatePalFilter = (str) => {
         switch (this.state.palfilter) {
-            case "all":
-                return true;
             case "onlypals":
                 return this.isPalindrome(str);
             case "notpals":
                 return !this.isPalindrome(str);
+            case "all":
             default:
                 return true;
         }
@@ -299,6 +387,23 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         this.setState({
             dbPalindromes: {palindromes: thePalindromes}
         });
+    };
+
+    handleSortOrder = (event) => {
+        let headerId = event.target.id;
+        let direction = this.state.sortInfo.sortDesc;
+        if (this.state.sortInfo.sortCol === headerId) {
+            direction = !direction;
+        }
+
+        var sortInfo = {
+            sortCol: headerId,
+            sortDesc: direction
+        };
+        this.setState({
+            sortInfo: sortInfo
+        });
+        return sortInfo;
     };
 
     handleAllNoneChecked = (event) => {
@@ -324,8 +429,8 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         let smoothedParts = this.smooth(this.state.palindrome);
         let smoothHtml = [];
         smoothHtml.push(<span>{smoothedParts[0]}</span>,
-            <span className="midpoint">{smoothedParts[1]}</span>,
-            <span>{smoothedParts[2]}</span>);
+            <span  className="midpoint">{smoothedParts[1]}</span>,
+            <span >{smoothedParts[2]}</span>);
 
         return (
             <div>
@@ -355,54 +460,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                     <div>
                         <div>DB palindromes:</div>
                     </div>
-                    <div className="indent">
-                        <table className={"list section-border"}>
-                            <thead>
-                            <tr>
-                                <th>
-                                    <input
-                                        type="checkbox"
-                                        name="allNone"
-                                        checked={this.state.allNone}
-                                        onChange={this.handleAllNoneChecked}
-                                        value={"value"}
-                                        className={"checkbox"}
-                                    />
-
-                                </th>
-                                <th>Entry</th>
-                                <th>Created</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {this.state.dbPalindromes.palindromes
-                                .filter(pal => this.evaluatePalFilter(pal.raw))
-                                .slice().sort((a, b) => this.comparePals(a, b))
-                                .map((item, key) =>
-                                    <tr key={key}>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                name="listitems"
-                                                checked={item.selected}
-                                                onChange={this.handleChecked}
-                                                value={item.id}
-                                                className={"checkbox"}
-                                            />
-                                        </td>
-                                        <td className={"list-item no-margin " + this.palindromeClass(item.raw)}>
-                                            {item.raw}
-                                        </td>
-                                        <td>
-                                           {item.createTime.toLocaleString()}
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div>
+                    <div className={"indent"}>
                         <div className="radio-button">
                             <label>
                                 <input
@@ -447,14 +505,106 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                         </button>
 
                     </div>
-                </div>
+                    <div className="indent">
+                        <table className={"list section-border"}>
+                            <thead>
+                            <tr>
+                                <th>
+                                    <input
+                                        type="checkbox"
+                                        name="allNone"
+                                        checked={this.state.allNone}
+                                        onChange={this.handleAllNoneChecked}
+                                        value={"value"}
+                                        className={"checkbox"}
+                                    />
+
+                                </th>
+
+                                <ColumnClickDisplay
+                                    handleSortOrder={this.handleSortOrder}
+                                    columnId={"entryColumn"}
+                                     headerText={"Entry"}
+                                     markerClass={"palListSorter"}
+                                    initialSort={true}
+                                />
+                                {/*<th id="entryColumn" onClick={this.handleSortOrder}>*/}
+                                {/*    Entry <span*/}
+                                {/*                className={ARROW_UP_CLASSES_INIT}/>*/}
+                                {/*            <span*/}
+                                {/*                  className={ARROW_DOWN_CLASSES_INIT}/></th>*/}
+                                <ColumnClickDisplay
+                                    handleSortOrder={this.handleSortOrder}
+                                    columnId={"createdColumn"}
+                                    headerText={"Created"}
+                                    markerClass={"palListSorter"}
+                                />
+                                {/*<th id="createdColumn" onClick={this.handleSortOrder}>*/}
+                                {/*    Created <span*/}
+                                {/*                  className={ARROW_UP_CLASSES_INIT}/>*/}
+                                {/*              <span*/}
+                                {/*                    className={ARROW_DOWN_CLASSES_INIT}/></th>*/}
+                                <ColumnClickDisplay
+                                    handleSortOrder={this.handleSortOrder}
+                                    columnId={"uidColumn"}
+                                    headerText={"User UID"}
+                                    markerClass={"palListSorter"}
+                                />
+                                {/*<th id="uidColumn" onClick={this.handleSortOrder}>*/}
+                                {/*    User UID <span*/}
+                                {/*                   className={ARROW_UP_CLASSES_INIT}/>*/}
+                                {/*               <span*/}
+                                {/*                     className={ARROW_DOWN_CLASSES_INIT}/></th>*/}
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {this.state.dbPalindromes.palindromes
+                                .filter(pal => this.evaluatePalFilter(pal.raw))
+                                .slice().sort((a, b) => this.comparePals(a, b))
+                                .map((item, key) =>
+                                    <tr key={key}>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                name="listitems"
+                                                checked={item.selected}
+                                                onChange={this.handleChecked}
+                                                value={item.id}
+                                                className={"checkbox"}
+                                            />
+                                        </td>
+                                        <td className={"list-item no-margin " + this.palindromeClass(item.raw)}>
+                                            {item.raw}
+                                        </td>
+                                        <td>
+                                            {item.createTime.toLocaleString()}
+                                        </td>
+                                        <td>
+                                            {item.user}
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                 </div>
             </div>
         );
     }
 
     comparePals = (a, b) => {
-        return b.createTime - a.createTime;
-    }
+        switch (this.state.sortInfo.sortCol) {
+            case "createdColumn":
+                return this.state.sortInfo.sortDesc ? b.createTime - a.createTime: a.createTime - b.createTime;
+            case "entryColumn":
+                return this.state.sortInfo.sortDesc ? b.raw.localeCompare(a.raw): a.raw.localeCompare(b.raw);
+            case "uidColumn":
+                return this.state.sortInfo.sortDesc ? b.user.localeCompare(a.user): a.user.localeCompare(b.user);
+            default:
+                return 0;
+        }
+     }
 
     reverseString(str) {
         return str.split("").reverse().join("");
