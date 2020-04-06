@@ -1,5 +1,5 @@
 import * as React from "react";
-import {render} from "react-dom";
+//import {render} from "react-dom";
 import './index.css';
 import firebase from './firebase.js'
 import {firestore} from "firebase";
@@ -15,22 +15,22 @@ import {firestore} from "firebase";
 //     import * as firebase from 'firebase/app';
 
 import "firebase/auth";
-import {
-    FirebaseAuthProvider,
-    FirebaseAuthConsumer
-} from "@react-firebase/auth";
-import * as admin from "firebase-admin";
-import DocumentData = admin.firestore.DocumentData;
-import QueryDocumentSnapshot = admin.firestore.QueryDocumentSnapshot;
+// import {
+//     FirebaseAuthProvider,
+//     FirebaseAuthConsumer
+// } from "@react-firebase/auth";
+// import * as admin from "firebase-admin";
+// import DocumentData = admin.firestore.DocumentData;
+// import QueryDocumentSnapshot = admin.firestore.QueryDocumentSnapshot;
 
 // import {config} from "firebase" ;//"./firebase.js";
 
 var db = firebase.firestore();
 
 
-const IDontCareAboutFirebaseAuth = () => {
-    return <div>This part won't react to firebase auth changes</div>;
-};
+// const IDontCareAboutFirebaseAuth = () => {
+//     return <div>This part won't react to firebase auth changes</div>;
+// };
 
 
 interface IColumnClickDisplayState {
@@ -41,7 +41,7 @@ interface IColumnClickDisplayState {
 }
 
 interface IColumnClickDisplayProps {
-    handleSortOrder(name: string): any;
+    handleSortOrder(name: any): any;
 
     columnId: string;
     headerText: string;
@@ -50,6 +50,7 @@ interface IColumnClickDisplayProps {
 
 
 class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColumnClickDisplayState> {
+    // @ts-ignore
     constructor(props) {
         super(props);
         this.state = {
@@ -71,7 +72,7 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
     ARROW_UP_CLASSES_INIT_SEEN = [this.ARROW_UP, this.SEEN, this.OVERLAY].join(" ");
     ARROW_DOWN_CLASSES_INIT_SEEN = [this.ARROW_DOWN, this.SEEN, this.OVERLAY].join(" ");
 
-    handleSortOrder = (e) => {
+    handleSortOrder = (e: any) => {
         // ask the parent for sortInfo
         var sortInfo = this.props.handleSortOrder(e);
         this.displayTheArrows(sortInfo);
@@ -90,26 +91,26 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
         // )
     }
 
-    displayTheArrows(sortInfo) {
+    displayTheArrows(sortInfo: any) {
         let allHeaderElements = document.getElementsByClassName(this.props.markerClass);
 
         Array.from(allHeaderElements)
             .forEach((theElement) => {
                 var theClasses = theElement.classList.value.split(/\s+/);
                 // console.log("\n------------\ntheClasses ", theClasses, " sortInfo ", sortInfo )
-                if (theElement.parentElement.id == sortInfo.sortCol) {
-                    if (theClasses.findIndex((aClass) => aClass == this.ARROW_UP) != -1) {
+                if (theElement.parentElement && theElement.parentElement.id === sortInfo.sortCol) {
+                    if (theClasses.findIndex((aClass) => aClass === this.ARROW_UP) !== -1) {
                         // console.log("here 1 - ArrowUp");
-                        var visIndex = theClasses.findIndex((aClass) => aClass == (sortInfo.sortDesc ? this.NOT_SEEN: this.SEEN ));
-                        if (visIndex != -1) {
+                        let visIndex = theClasses.findIndex((aClass) => aClass === (sortInfo.sortDesc ? this.NOT_SEEN: this.SEEN ));
+                        if (visIndex !== -1) {
                             // console.log("here 2");
                             theClasses[visIndex] = (sortInfo.sortDesc ? this.NOT_SEEN : this.SEEN);
                             theElement.classList.value = theClasses.join(" ");
                         }
-                    } else if (theClasses.findIndex((aClass) => aClass == this.ARROW_DOWN) != -1) {
+                    } else if (theClasses.findIndex((aClass) => aClass === this.ARROW_DOWN) !== -1) {
                         // console.log("here 3 - ArroDown");
-                        var visIndex = theClasses.findIndex((aClass) => aClass == (!sortInfo.sortDesc ? this.SEEN : this.NOT_SEEN));
-                        if (visIndex != -1) {
+                        let visIndex = theClasses.findIndex((aClass) => aClass === (!sortInfo.sortDesc ? this.SEEN : this.NOT_SEEN));
+                        if (visIndex !== -1) {
                             // console.log("here 4");
                             theClasses[visIndex] = (sortInfo.sortDesc ? this.SEEN : this.NOT_SEEN);
                             theElement.classList.value = theClasses.join(" ");
@@ -117,8 +118,8 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
                     }
                 } else {
                     // console.log("here 5");
-                    var visIndex = theClasses.findIndex((aClass) => aClass == this.SEEN);
-                    if (visIndex != -1) {
+                    let visIndex = theClasses.findIndex((aClass) => aClass === this.SEEN);
+                    if (visIndex !== -1) {
                         // console.log("here 6");
                         theClasses[visIndex] = this.NOT_SEEN;
                         theElement.classList.value = theClasses.join(" ");
@@ -137,9 +138,9 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
                 {this.props.headerText}&nbsp;
 
                 <span
-                    className={((sortInfo.sortCol == this.props.columnId && !sortInfo.sortDesc) ? this.ARROW_UP_CLASSES_INIT_SEEN : this.ARROW_UP_CLASSES_INIT_NOT_SEEN) + " " + this.props.markerClass}/>
+                    className={((sortInfo.sortCol === this.props.columnId && !sortInfo.sortDesc) ? this.ARROW_UP_CLASSES_INIT_SEEN : this.ARROW_UP_CLASSES_INIT_NOT_SEEN) + " " + this.props.markerClass}/>
                 <span
-                    className={((sortInfo.sortCol == this.props.columnId && sortInfo.sortDesc) ? this.ARROW_DOWN_CLASSES_INIT_SEEN : this.ARROW_DOWN_CLASSES_INIT_NOT_SEEN) + " " + this.props.markerClass}/>
+                    className={((sortInfo.sortCol === this.props.columnId && sortInfo.sortDesc) ? this.ARROW_DOWN_CLASSES_INIT_SEEN : this.ARROW_DOWN_CLASSES_INIT_NOT_SEEN) + " " + this.props.markerClass}/>
             </th>
         );
     }
@@ -160,17 +161,17 @@ interface ITextInputState {
 }
 
 interface ITextInputProps {
-    onChange(name: string): any;
+    onChange(name: string | undefined): any;
 
-    checkPalindrome(name: string): any;
+    checkPalindrome(name: string | undefined): any;
 
-    reverseText(name: string): any;
+    reverseText(name: string | undefined): any;
 
-    saveText(name: string): any;
+    saveText(name: string | undefined): any;
 }
 
 class TextInput extends React.Component<ITextInputProps, ITextInputState> {
-    constructor(props) {
+    constructor(props: any) {
         super(props);
         this.state = {
             text: "",
@@ -178,7 +179,7 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
         }
     }
 
-    onChange = (e) => {
+    onChange = (e: any) => {
         const value = e.target.value;
         this.props.onChange(value);
         const isPal = this.props.checkPalindrome(value);
@@ -274,7 +275,7 @@ interface IPalindromeProps {
  *
  * */
 class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
-    constructor(props) {
+    constructor(props: any) {
         super(props);
         this.state = {
             palindrome: "",
@@ -316,7 +317,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
 
 
     reloadFromDb() {
-        var thePalindromes = {"palindromes": []};
+        var thePalindromes = {"palindromes": Array()};
         db.collection("/palindromes").get().then((querySnapshot) => {
 //                console.log("querySnapShot " + JSON.stringify(querySnapshot));
             querySnapshot.forEach((doc) => {
@@ -330,7 +331,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 var theId = `${doc.id}`;
                 var theCreateTime = new Date(1000 * Number(`${doc.data().createTime.seconds}`));
                 thePalindromes.palindromes.push({
-                    "raw": theRaw,
+                    "raw" : theRaw,
                     "cooked": theCooked,
                     id: theId,
                     selected: false,
@@ -348,13 +349,13 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
 
     //console.log("byId? " + JSON.stringify(thePalindromes.palindromes.filter(obj => obj.id === "0OMgK4Bd5cFLa8pw5O4m")));
 
-    onChange = (value) => {
+    onChange = (value: any) => {
         this.setState(() => ({
             palindrome: value,
         }));
     };
 
-    reverseText = (str) => {
+    reverseText = (str: any) => {
         const flipped = this.reverseString(str);
         this.setState(() => ({
             palindrome: flipped,
@@ -362,11 +363,11 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         return flipped;
     };
 
-    checkPalindrome = (str) => {
+    checkPalindrome = (str: any) => {
         return this.isPalindrome(str);
     };
 
-    saveText = (str) => {
+    saveText = (str: any) => {
         if (!str) {
             return "";
         }
@@ -386,7 +387,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         this.reloadFromDb();
     };
 
-    deleteDocument = (pal) => {
+    deleteDocument = (pal: any) => {
         db.collection("/palindromes").doc(pal.id).delete().then(function () {
             console.log("Palindrome successfully deleted " + JSON.stringify(pal));
         }).catch(function (error) {
@@ -394,13 +395,13 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         });
     };
 
-    addToDb = (str) => {
-        var userJSON = firebase.auth().currentUser.toJSON();
+    addToDb = (str: any) => {
+        var userJSON: any = firebase.auth().currentUser!.toJSON();
         db.collection("palindromes").add({
             raw: str,
             cooked: this.normalizeString(str),
             createTime: firestore.Timestamp.fromDate(new Date()),
-            user: JSON.stringify(Object.keys(userJSON).reduce((obj, key) => {
+            user: JSON.stringify(Object.keys(userJSON).reduce((obj:any, key) => {
                     if (["uid","displayName", "photoURL"].includes(key) ) {
                         obj[key] = userJSON[key];
                     }
@@ -425,7 +426,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
 * */
     };
 
-    evaluatePalFilter = (str) => {
+    evaluatePalFilter = (str: any) => {
         switch (this.state.palfilter) {
             case "onlypals":
                 return this.isPalindrome(str);
@@ -437,10 +438,10 @@ const newCar = Object.keys(car).reduce((object, key) => {
         }
     };
 
-    handleChecked = (event) => {
+    handleChecked = (event: any) => {
         var docId = event.target.value;
         var thePalindromes = this.state.dbPalindromes.palindromes.slice();
-        var position = thePalindromes.findIndex(function (element, index, array) {
+        var position = thePalindromes.findIndex(function (element) {
             return element.id === docId
         });
 
@@ -452,7 +453,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
         });
     };
 
-    handleSortOrder = (event) => {
+    handleSortOrder = (event: any) => {
         let headerId = event.target.id;
         let direction = this.state.sortInfo.sortDesc;
         if (this.state.sortInfo.sortCol === headerId) {
@@ -469,7 +470,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
         return sortInfo;
     };
 
-    handleAllNoneChecked = (event) => {
+    handleAllNoneChecked = () => {
         var isSelected = !this.state.allNone;
         var thePalindromes = this.state.dbPalindromes.palindromes.slice();
         thePalindromes.map((item) => item.selected = isSelected);
@@ -479,7 +480,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
         });
     };
 
-    handleOptionChange = event => {
+    handleOptionChange = (event: { target: { value: string; }; }) => {
 
         this.setState({
             palfilter: event.target.value
@@ -565,7 +566,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
                         </div>
                         <button className="pal-button"
                                 onClick={ this.deleteSelected }
-                                disabled={ firebase.auth().currentUser.isAnonymous || this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length == 0 }
+                                disabled={ firebase.auth().currentUser!.isAnonymous || this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0 }
                         >
                             Delete Selected
                         </button>
@@ -614,7 +615,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
                                 .map((item, key) =>
                                     <tr key={key}>
                                         <td>
-                                            {!firebase.auth().currentUser.isAnonymous && <input
+                                            {!(firebase.auth().currentUser!.isAnonymous) && <input
                                                 type="checkbox"
                                                 name="listitems"
                                                 checked={item.selected}
@@ -643,7 +644,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
         );
     }
 
-    comparePals = (a, b) => {
+    comparePals = (a:any, b:any) => {
         switch (this.state.sortInfo.sortCol) {
             case "createdColumn":
                 return this.state.sortInfo.sortDesc ? b.createTime - a.createTime : a.createTime - b.createTime;
@@ -656,14 +657,14 @@ const newCar = Object.keys(car).reduce((object, key) => {
         }
     };
 
-    reverseString(str) {
+    reverseString(str:string) {
         return str.split("").reverse().join("");
     }
 
     /** Removes whitespace, punctuation and diacriticals, then formats with one space between uppercase characters
      * I have found this to be the easiest format for the eye to pick up on word patterns.
      * */
-    normalizeString(str) {
+    normalizeString(str:string) {
         return this.stripWhiteSpace(this.stripPunctuation(this.stripDiacriticals(str))).toUpperCase()
             .split("").join(" ");
     }
@@ -673,7 +674,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
      * TODO: Known issues - "ß" which ends up as "ss" not "s" and æ which ends up as "ae" and perhaps some other similar
      *
      * */
-    stripDiacriticals(str) {
+    stripDiacriticals(str:string) {
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
@@ -682,7 +683,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
      * It's a fairly exhaustive regex I found on the web so it must be correct :)
      *
      * */
-    stripPunctuation(str) {
+    stripPunctuation(str:string) {
         return str.replace(
             /[!-/:-@[-`{-~¡-©«-¬®-±´¶-¸»¿×÷˂-˅˒-˟˥-˫˭˯-˿͵;΄-΅·϶҂՚-՟։-֊־׀׃׆׳-״؆-؏؛؞-؟٪-٭۔۩۽-۾܀-܍߶-߹।-॥॰৲-৳৺૱୰௳-௺౿ೱ-ೲ൹෴฿๏๚-๛༁-༗༚-༟༴༶༸༺-༽྅྾-࿅࿇-࿌࿎-࿔၊-၏႞-႟჻፠-፨᎐-᎙᙭-᙮᚛-᚜᛫-᛭᜵-᜶។-៖៘-៛᠀-᠊᥀᥄-᥅᧞-᧿᨞-᨟᭚-᭪᭴-᭼᰻-᰿᱾-᱿᾽᾿-῁῍-῏῝-῟῭-`´-῾\u2000-\u206e⁺-⁾₊-₎₠-₵℀-℁℃-℆℈-℉℔№-℘℞-℣℥℧℩℮℺-℻⅀-⅄⅊-⅍⅏←-⏧␀-␦⑀-⑊⒜-ⓩ─-⚝⚠-⚼⛀-⛃✁-✄✆-✉✌-✧✩-❋❍❏-❒❖❘-❞❡-❵➔➘-➯➱-➾⟀-⟊⟌⟐-⭌⭐-⭔⳥-⳪⳹-⳼⳾-⳿⸀-\u2e7e⺀-⺙⺛-⻳⼀-⿕⿰-⿻\u3000-〿゛-゜゠・㆐-㆑㆖-㆟㇀-㇣㈀-㈞㈪-㉃㉐㉠-㉿㊊-㊰㋀-㋾㌀-㏿䷀-䷿꒐-꓆꘍-꘏꙳꙾꜀-꜖꜠-꜡꞉-꞊꠨-꠫꡴-꡷꣎-꣏꤮-꤯꥟꩜-꩟﬩﴾-﴿﷼-﷽︐-︙︰-﹒﹔-﹦﹨-﹫！-／：-＠［-｀｛-･￠-￦￨-￮￼-�]|\ud800[\udd00-\udd02\udd37-\udd3f\udd79-\udd89\udd90-\udd9b\uddd0-\uddfc\udf9f\udfd0]|\ud802[\udd1f\udd3f\ude50-\ude58]|\ud809[\udc00-\udc7e]|\ud834[\udc00-\udcf5\udd00-\udd26\udd29-\udd64\udd6a-\udd6c\udd83-\udd84\udd8c-\udda9\uddae-\udddd\ude00-\ude41\ude45\udf00-\udf56]|\ud835[\udec1\udedb\udefb\udf15\udf35\udf4f\udf6f\udf89\udfa9\udfc3]|\ud83c[\udc00-\udc2b\udc30-\udc93]/g,
             "");
@@ -691,14 +692,14 @@ const newCar = Object.keys(car).reduce((object, key) => {
     /**
      * Strips all white space
      * */
-    stripWhiteSpace(str) {
+    stripWhiteSpace(str:string) {
         return str.replace(/\s/g, "");
     }
 
     /**
      * Checks if str is a plindrome by normalizing it and comparing to its reverse
      * */
-    isPalindrome(str) {
+    isPalindrome(str:string) {
         var normal = this.normalizeString(str);
         return normal === this.reverseString(normal);
     }
@@ -710,7 +711,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
      * 2. revese string
      * 3. return array with three strings: before the midpoint, the midpoint or turnaround string, after the midpoint
      * */
-    smooth(str) {
+    smooth(str:string) {
         var smooth = this.reverseString(this.normalizeString(str));
         var nChars = (smooth.length + 1) / 2;
         var turnaroundSize = ((nChars % 2) === 0 ? 4 : 3);
@@ -728,7 +729,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
      *  TODO: separate concerns better
      * @returns {string | representing the color class to use for formatting}
      */
-    palindromeClass(str) {
+    palindromeClass(str:string) {
         return str ? (this.isPalindrome(str) ? "is-pal" : "not-pal") : "";
     }
 }

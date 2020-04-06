@@ -3,7 +3,7 @@ import {render} from "react-dom";
 import Palforge from "./Palforge"
 
 import {
-    FirebaseAuthConsumer,
+   // FirebaseAuthConsumer,
     FirebaseAuthProvider,
     IfFirebaseAuthed,
     IfFirebaseUnAuthed
@@ -12,37 +12,37 @@ import * as firebase from "firebase/app";
 import {config} from "./firebase";
 import {State} from "react-powerplug";
 // @ts-ignore
-import functions from "firebase";
+//import functions from "firebase";
 
 
 
-const concept = "world";
+//const concept = "world";
 
 
 const IDontCareAboutFirebaseAuth = () => {
     return <div>This part won't react to firebase auth changes</div>;
 };
 
-const displayUserInfo = (profile, isAnonymous) => {
+const displayUserInfo = (profile: firebase.UserInfo | null, isAnonymous: boolean) => {
     // console.log("2 " + JSON.stringify(profile));
     return (
         <div>
-            <img className={"profileImg"}
-                 src={!isAnonymous ? profile.photoURL : require('/resources/anonymous.png')}/>
+            <img className={"profileImg"} alt={"Anonymous"}
+                 src={!isAnonymous ? profile && profile.photoURL : require('./resources/anonymous.png')}/>
             <table>
                 <thead>
                 <tr>
-                    <td colSpan={2}>{!isAnonymous ? profile.providerId : "Anonymous"}</td>
+                    <td colSpan={2}>{!isAnonymous ? profile && profile.providerId : "Anonymous"}</td>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
                     <td>Name:</td>
-                    <td>{!isAnonymous ? profile.displayName : "Anonymous"}</td>
+                    <td>{!isAnonymous ? profile && profile.displayName : "Anonymous"}</td>
                 </tr>
                 <tr>
                     <td>Email:</td>
-                    <td>{!isAnonymous ? profile.email : " "}</td>
+                    <td>{!isAnonymous ? profile && profile.email : " "}</td>
                 </tr>
                 </tbody>
             </table>
@@ -63,10 +63,11 @@ const App = () => {
                             <IfFirebaseAuthed>
                                 {() => {
                                     // console.log (JSON.stringify(firebase.auth().currentUser));
+                                    // @ts-ignore
                                     var isAnonymous = firebase.auth().currentUser.isAnonymous;
                                     return (
                                         <div>
-                                            <h4>You're signed in 🎉 </h4>
+                                            <h4>You're signed in <span role="img" aria-label="weird emoji" >🎉 </span></h4>
                                             {
                                                 //displayUserInfo(firebase.auth().currentUser.providerData[0], true)
                                                 <ol>
@@ -75,6 +76,7 @@ const App = () => {
                                                         (isAnonymous) ?
                                                             <li>{displayUserInfo(null, isAnonymous)}</li> :
 
+                                                            // @ts-ignore
                                                             firebase.auth().currentUser.providerData.map((profile, i) => {
                                                             console.log("1 " + JSON.stringify(profile));
                                                             return <li key={i}>{displayUserInfo(profile, isAnonymous)}</li>;
