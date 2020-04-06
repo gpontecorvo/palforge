@@ -377,6 +377,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     };
 
     deleteSelected = () => {
+        console.log("clicked");
         var selected = this.state.dbPalindromes.palindromes.filter(pal => pal.selected);
         selected.map(pal => {
             this.deleteDocument(pal);
@@ -444,6 +445,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
         });
 
         thePalindromes[position].selected = !thePalindromes[position].selected;
+
 //        console.log("item : " + JSON.stringify(thePalindromes[position]));
         this.setState({
             dbPalindromes: {palindromes: thePalindromes}
@@ -561,7 +563,10 @@ const newCar = Object.keys(car).reduce((object, key) => {
                                 Only Non-palindromes
                             </label>
                         </div>
-                        <button className="pal-button" onClick={this.deleteSelected}>
+                        <button className="pal-button"
+                                onClick={ this.deleteSelected }
+                                disabled={ firebase.auth().currentUser.isAnonymous || this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length == 0 }
+                        >
                             Delete Selected
                         </button>
 

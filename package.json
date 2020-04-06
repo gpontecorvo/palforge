@@ -1,6 +1,6 @@
 {
-  "name": "tutorial-bookmarking-app",
-  "version": "1.0.0",
+  "name": "palforge",
+  "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@react-firebase/auth": "^0.2.10",
