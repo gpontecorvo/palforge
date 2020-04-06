@@ -3,6 +3,7 @@ import {render} from "react-dom";
 import './index.css';
 import firebase from './firebase.js'
 import {firestore} from "firebase";
+
 // const firebase = require('firebase/app');
 // require('firebase/<PACKAGE>');
 
@@ -18,6 +19,9 @@ import {
     FirebaseAuthProvider,
     FirebaseAuthConsumer
 } from "@react-firebase/auth";
+import * as admin from "firebase-admin";
+import DocumentData = admin.firestore.DocumentData;
+import QueryDocumentSnapshot = admin.firestore.QueryDocumentSnapshot;
 
 // import {config} from "firebase" ;//"./firebase.js";
 
@@ -42,12 +46,6 @@ interface IColumnClickDisplayProps {
     columnId: string;
     headerText: string;
     markerClass: string;
-    initialSort?: {
-        sortInfo: {
-            sortCol: string;
-            sortDesc: boolean;
-        }
-    };
 }
 
 
@@ -55,7 +53,7 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
     constructor(props) {
         super(props);
         this.state = {
-            sortInfo: props.initialSort ? props.initialSort.sortInfo : {
+            sortInfo: {
                 sortCol: "",
                 sortDesc: false
             }
@@ -83,13 +81,13 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
     };
 
     componentDidMount(): void {
-        this.setState({
-                sortInfo: this.props.initialSort ? this.props.initialSort.sortInfo : {
-                    sortCol: "",
-                    sortDesc: false
-                }
-            }
-        )
+        // this.setState({
+        //         sortInfo: {
+        //             sortCol: "",
+        //             sortDesc: false
+        //         }
+        //     }
+        // )
     }
 
     displayTheArrows(sortInfo) {
@@ -126,7 +124,6 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
                         theElement.classList.value = theClasses.join(" ");
                     }
                 }
-                console.log("\n------------\n " );
 
             });
     }
@@ -247,7 +244,7 @@ interface IDbPalindrome {
     id: string;
     selected: boolean;
     createTime: number;
-    user: string;
+    user: any;
 }
 
 interface IPalindromeState {
@@ -265,12 +262,6 @@ interface IPalindromeState {
 }
 
 interface IPalindromeProps {
-    initialSort: {
-        sortInfo: {
-            sortCol: string;
-            sortDesc: boolean;
-        }
-    }
 }
 
 /**
@@ -299,20 +290,43 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
 
     componentDidMount() {
         this.reloadFromDb();
-        this.setState({
-            sortInfo: this.props.initialSort.sortInfo
-        });
-
+        // this.setState({
+        //     sortInfo: this.props.initialSort.sortInfo
+        // });
+// Start listing users from the beginning, 1000 at a time.
+        //this.listAllUsers(null);
     }
+
+    // listAllUsers(nextPageToken) {
+    //     // List batch of users, 1000 at a time.
+    //     admin.auth().listUsers(1000, nextPageToken)
+    //         .then(function(listUsersResult) {
+    //             listUsersResult.users.forEach(function(userRecord) {
+    //                 console.log('user', userRecord.toJSON());
+    //             });
+    //             if (listUsersResult.pageToken) {
+    //                 // List next batch of users.
+    //                 this.listAllUsers(listUsersResult.pageToken);
+    //             }
+    //         })
+    //         .catch(function(error) {
+    //             console.log('Error listing users:', error);
+    //         });
+    // }
+
 
     reloadFromDb() {
         var thePalindromes = {"palindromes": []};
         db.collection("/palindromes").get().then((querySnapshot) => {
 //                console.log("querySnapShot " + JSON.stringify(querySnapshot));
             querySnapshot.forEach((doc) => {
+                //console.log(JSON.stringify(doc.data()));
                 var theRaw = `${doc.data().raw}`;
                 var theCooked = `${doc.data().cooked}`;
                 var theUser = `${doc.data().user}`;
+                if (theUser.startsWith("{")) {
+                    theUser = JSON.parse(theUser).uid;
+                }
                 var theId = `${doc.id}`;
                 var theCreateTime = new Date(1000 * Number(`${doc.data().createTime.seconds}`));
                 thePalindromes.palindromes.push({
@@ -380,11 +394,18 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     };
 
     addToDb = (str) => {
+        var userJSON = firebase.auth().currentUser.toJSON();
         db.collection("palindromes").add({
             raw: str,
             cooked: this.normalizeString(str),
             createTime: firestore.Timestamp.fromDate(new Date()),
-            user: firebase.auth().currentUser.uid,
+            user: JSON.stringify(Object.keys(userJSON).reduce((obj, key) => {
+                    if (["uid","displayName", "photoURL"].includes(key) ) {
+                        obj[key] = userJSON[key];
+                    }
+                    return obj;
+                }, {}
+            )),
         })
             .then(function (docRef) {
                 console.log("Document written with ID: ", docRef.id);
@@ -392,7 +413,15 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             .catch(function (error) {
                 console.error("Error adding document: ", error);
             });
-
+/*
+*
+const newCar = Object.keys(car).reduce((object, key) => {
+  if ([] ]) {
+    object[key] = car[key]
+  }
+  return object
+}, {})
+* */
     };
 
     evaluatePalFilter = (str) => {
@@ -559,33 +588,18 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                     headerText={"Entry"}
                                     markerClass={"palListSorter"}
                                 />
-                                {/*<th id="entryColumn" onClick={this.handleSortOrder}>*/}
-                                {/*    Entry <span*/}
-                                {/*                className={ARROW_UP_CLASSES_INIT}/>*/}
-                                {/*            <span*/}
-                                {/*                  className={ARROW_DOWN_CLASSES_INIT}/></th>*/}
                                 <ColumnClickDisplay
                                     handleSortOrder={this.handleSortOrder}
                                     columnId={"createdColumn"}
                                     headerText={"Created"}
                                     markerClass={"palListSorter"}
                                 />
-                                {/*<th id="createdColumn" onClick={this.handleSortOrder}>*/}
-                                {/*    Created <span*/}
-                                {/*                  className={ARROW_UP_CLASSES_INIT}/>*/}
-                                {/*              <span*/}
-                                {/*                    className={ARROW_DOWN_CLASSES_INIT}/></th>*/}
                                 <ColumnClickDisplay
                                     handleSortOrder={this.handleSortOrder}
                                     columnId={"uidColumn"}
                                     headerText={"User UID"}
                                     markerClass={"palListSorter"}
                                 />
-                                {/*<th id="uidColumn" onClick={this.handleSortOrder}>*/}
-                                {/*    User UID <span*/}
-                                {/*                   className={ARROW_UP_CLASSES_INIT}/>*/}
-                                {/*               <span*/}
-                                {/*                     className={ARROW_DOWN_CLASSES_INIT}/></th>*/}
                             </tr>
                             </thead>
                             <tbody>
@@ -595,14 +609,14 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                 .map((item, key) =>
                                     <tr key={key}>
                                         <td>
-                                            <input
+                                            {!firebase.auth().currentUser.isAnonymous && <input
                                                 type="checkbox"
                                                 name="listitems"
                                                 checked={item.selected}
                                                 onChange={this.handleChecked}
                                                 value={item.id}
                                                 className={"checkbox"}
-                                            />
+                                            />}
                                         </td>
                                         <td className={"list-item no-margin " + this.palindromeClass(item.raw)}>
                                             {item.raw}
@@ -611,7 +625,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                             {item.createTime.toLocaleString()}
                                         </td>
                                         <td>
-                                            {item.user}
+                                            {typeof item.user === "string" ? item.user : item.user.uid}
                                         </td>
                                     </tr>
                                 )}
@@ -720,18 +734,19 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
  */
 class Palforge extends React.Component {
     render() {
-        let initialSort = {
-            sortInfo: {
-                sortCol: "entryColumn",
-                sortDesc: false
-            }
-        };
+        // let initialSort = {
+        //     sortInfo: {
+        //         sortCol: "entryColumn",
+        //         sortDesc: false
+        //     }
+        // };
         return (
             <div>
                 <div>
                     <div className="palforge">
                         <Palindrome
-                            initialSort={initialSort}
+                            // initialSort={initialSort
+                            // }
                         />
                     </div>
                 </div>

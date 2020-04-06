@@ -24,7 +24,7 @@ const IDontCareAboutFirebaseAuth = () => {
 };
 
 const displayUserInfo = (profile, isAnonymous) => {
-    //console.log("2 " + JSON.stringify(profile));
+    // console.log("2 " + JSON.stringify(profile));
     return (
         <div>
             <img className={"profileImg"}
@@ -38,11 +38,11 @@ const displayUserInfo = (profile, isAnonymous) => {
                 <tbody>
                 <tr>
                     <td>Name:</td>
-                    <td>{!isAnonymous && profile.displayName}</td>
+                    <td>{!isAnonymous ? profile.displayName : "Anonymous"}</td>
                 </tr>
                 <tr>
                     <td>Email:</td>
-                    <td>{!isAnonymous && profile.email}</td>
+                    <td>{!isAnonymous ? profile.email : " "}</td>
                 </tr>
                 </tbody>
             </table>
@@ -62,13 +62,13 @@ const App = () => {
                             <div>isLoading : {JSON.stringify(state.isLoading)}</div>
                             <IfFirebaseAuthed>
                                 {() => {
-//                                    console.log (JSON.stringify(firebase.auth().currentUser));
+                                    // console.log (JSON.stringify(firebase.auth().currentUser));
                                     var isAnonymous = firebase.auth().currentUser.isAnonymous;
                                     return (
                                         <div>
                                             <h4>You're signed in 🎉 </h4>
                                             {
-                                                // displayUserInfo(firebase.auth().currentUser.providerData[0])
+                                                //displayUserInfo(firebase.auth().currentUser.providerData[0], true)
                                                 <ol>
 
                                                     {
@@ -76,7 +76,7 @@ const App = () => {
                                                             <li>{displayUserInfo(null, isAnonymous)}</li> :
 
                                                             firebase.auth().currentUser.providerData.map((profile, i) => {
-                                                            //console.log(JSON.stringify("1 " + profile));
+                                                            console.log("1 " + JSON.stringify(profile));
                                                             return <li key={i}>{displayUserInfo(profile, isAnonymous)}</li>;
                                                             })
 
