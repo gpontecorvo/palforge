@@ -38,7 +38,7 @@ const displayUserInfo = (profile: firebase.UserInfo | null, isAnonymous: boolean
                 <tbody>
                 <tr>
                     <td>Name:</td>
-                    <td>{!isAnonymous ? profile && profile.displayName : "Anonymous"}</td>
+                    <td>{!isAnonymous ? profile && profile.displayName : firebase.auth().currentUser!.uid}</td>
                 </tr>
                 <tr>
                     <td>Email:</td>
@@ -76,9 +76,8 @@ const App = () => {
                                                         (isAnonymous) ?
                                                             <li>{displayUserInfo(null, isAnonymous)}</li> :
 
-                                                            // @ts-ignore
-                                                            firebase.auth().currentUser.providerData.map((profile, i) => {
-                                                            console.log("1 " + JSON.stringify(profile));
+
+                                                            firebase.auth().currentUser!.providerData.map((profile, i) => {
                                                             return <li key={i}>{displayUserInfo(profile, isAnonymous)}</li>;
                                                             })
 

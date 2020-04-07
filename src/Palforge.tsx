@@ -101,7 +101,7 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
                 if (theElement.parentElement && theElement.parentElement.id === sortInfo.sortCol) {
                     if (theClasses.findIndex((aClass) => aClass === this.ARROW_UP) !== -1) {
                         // console.log("here 1 - ArrowUp");
-                        let visIndex = theClasses.findIndex((aClass) => aClass === (sortInfo.sortDesc ? this.NOT_SEEN: this.SEEN ));
+                        let visIndex = theClasses.findIndex((aClass) => aClass === (sortInfo.sortDesc ? this.NOT_SEEN : this.SEEN));
                         if (visIndex !== -1) {
                             // console.log("here 2");
                             theClasses[visIndex] = (sortInfo.sortDesc ? this.NOT_SEEN : this.SEEN);
@@ -132,7 +132,7 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
     render() {
 
         var sortInfo = this.state.sortInfo;
- //       console.log("sortinfo ", sortInfo);
+        //       console.log("sortinfo ", sortInfo);
         return (
             <th id={this.props.columnId} onClick={this.handleSortOrder.bind(this)}>
                 {this.props.headerText}&nbsp;
@@ -227,10 +227,17 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
                     <div className={"palindrome-status not-pal"}><span>not</span> palindrome </div>
                 }
                 <div>
-                    <button className="pal-button" onClick={this.reverseText.bind(this)}>
+                    <button className="pal-button"
+                            onClick={this.reverseText.bind(this)}
+                            disabled={this.state.text?.trim()!.length === 0}
+                    >
+
                         Reverse input
                     </button>
-                    <button className="pal-button" onClick={this.saveText.bind(this)}>
+                    <button className="pal-button"
+                            onClick={this.saveText.bind(this)}
+                            disabled={this.state.text?.trim()!.length === 0}
+                    >
                         Save
                     </button>
                 </div>
@@ -239,6 +246,11 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
     }
 }
 
+enum PalFilterType {
+    ALL =" ALL",
+    ONLY_PALINDROMES ="ONLY_PALINDROMES",
+    NOT_PALINDROMES = "NOT_PALINDROMES",
+}
 interface IDbPalindrome {
     raw: string;
     cooked: string;
@@ -253,7 +265,10 @@ interface IPalindromeState {
     dbPalindromes: {
         palindromes: IDbPalindrome[];
     };
-    palfilter: string;
+    palfilters: {
+        palFilterType: PalFilterType;
+        onlyMine: boolean;
+    }
     allNone: boolean;
     sortInfo: {
         sortCol: string;
@@ -280,7 +295,10 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         this.state = {
             palindrome: "",
             dbPalindromes: {"palindromes": []},
-            palfilter: "all",
+            palfilters: {
+                palFilterType: PalFilterType.ALL,
+                onlyMine: false
+            },
             allNone: false,
             sortInfo: {
                 sortCol: "",
@@ -321,17 +339,17 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         db.collection("/palindromes").get().then((querySnapshot) => {
 //                console.log("querySnapShot " + JSON.stringify(querySnapshot));
             querySnapshot.forEach((doc) => {
-                //console.log(JSON.stringify(doc.data()));
+                // console.log(JSON.stringify(doc.data().user));
                 var theRaw = `${doc.data().raw}`;
                 var theCooked = `${doc.data().cooked}`;
                 var theUser = `${doc.data().user}`;
-                if (theUser.startsWith("{")) {
-                    theUser = JSON.parse(theUser).uid;
-                }
+                // if (theUser.startsWith("{")) {
+                //     theUser = JSON.parse(theUser).uid;
+                // }
                 var theId = `${doc.id}`;
                 var theCreateTime = new Date(1000 * Number(`${doc.data().createTime.seconds}`));
                 thePalindromes.palindromes.push({
-                    "raw" : theRaw,
+                    "raw": theRaw,
                     "cooked": theCooked,
                     id: theId,
                     selected: false,
@@ -396,18 +414,20 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     };
 
     addToDb = (str: any) => {
-        var userJSON: any = firebase.auth().currentUser!.toJSON();
+        const userJSON: any = firebase.auth().currentUser!.toJSON();
+         const reducedJson = JSON.stringify(Object.keys(userJSON).reduce((obj: any, key) => {
+                if (["uid", "displayName", "photoURL"].includes(key)) {
+                    obj[key] = userJSON[key];
+                }
+                return obj;
+            }, {}
+        ));
+         console.log("addingtoDB:\n",reducedJson);
         db.collection("palindromes").add({
             raw: str,
             cooked: this.normalizeString(str),
             createTime: firestore.Timestamp.fromDate(new Date()),
-            user: JSON.stringify(Object.keys(userJSON).reduce((obj:any, key) => {
-                    if (["uid","displayName", "photoURL"].includes(key) ) {
-                        obj[key] = userJSON[key];
-                    }
-                    return obj;
-                }, {}
-            )),
+            user: reducedJson,
         })
             .then(function (docRef) {
                 console.log("Document written with ID: ", docRef.id);
@@ -415,28 +435,65 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             .catch(function (error) {
                 console.error("Error adding document: ", error);
             });
-/*
-*
-const newCar = Object.keys(car).reduce((object, key) => {
-  if ([] ]) {
-    object[key] = car[key]
-  }
-  return object
-}, {})
-* */
+        /*
+        *
+        const newCar = Object.keys(car).reduce((object, key) => {
+          if ([] ]) {
+            object[key] = car[key]
+          }
+          return object
+        }, {})
+        * */
     };
 
-    evaluatePalFilter = (str: any) => {
-        switch (this.state.palfilter) {
-            case "onlypals":
-                return this.isPalindrome(str);
-            case "notpals":
-                return !this.isPalindrome(str);
-            case "all":
+    evaluatePalFilters = (palEntry: IDbPalindrome) => {
+        let palTypeOk = true;
+        switch (this.state.palfilters.palFilterType) {
+            case PalFilterType.ONLY_PALINDROMES:
+                palTypeOk = this.isPalindrome(palEntry.cooked);
+                break;
+            case PalFilterType.NOT_PALINDROMES:
+                palTypeOk = !this.isPalindrome(palEntry.cooked);
+                break;
+            case PalFilterType.ALL:
             default:
-                return true;
+                palTypeOk = true;
         }
+        let theUser = palEntry.user;
+        if (theUser.startsWith("{")) {
+            theUser = JSON.parse(theUser).uid;
+        }
+        let onlyMineOk = this.state.palfilters.onlyMine ? (theUser === firebase.auth().currentUser!.uid) : true;
+        return palTypeOk && onlyMineOk;
     };
+
+    handleOnlyMineChecked = () => {
+        let isChecked = !this.state.palfilters.onlyMine;
+        let thePalindromes = this.state.dbPalindromes.palindromes.slice();
+        if (isChecked) {
+            // deselect the hidden ones to avoid inadvertent action on them
+            thePalindromes.map((entry) => {
+                let theUser = entry.user;
+                if (theUser.startsWith("{")) {
+                    theUser = JSON.parse(theUser).uid;
+                }
+                let isMine = (theUser === firebase.auth().currentUser!.uid);
+                if (!isMine) {
+                    entry.selected = false;
+                }
+                return entry;
+            });
+        }
+        let thePalType = this.state.palfilters.palFilterType;
+        this.setState({
+            palfilters: {
+                palFilterType: thePalType,
+                onlyMine: isChecked
+            },
+            dbPalindromes: {palindromes: thePalindromes}
+        });
+    };
+
 
     handleChecked = (event: any) => {
         var docId = event.target.value;
@@ -470,10 +527,11 @@ const newCar = Object.keys(car).reduce((object, key) => {
         return sortInfo;
     };
 
+
     handleAllNoneChecked = () => {
         var isSelected = !this.state.allNone;
         var thePalindromes = this.state.dbPalindromes.palindromes.slice();
-        thePalindromes.map((item) => item.selected = isSelected);
+        thePalindromes.map((entry) => entry.selected = isSelected && this.evaluatePalFilters(entry));
         this.setState({
             dbPalindromes: {palindromes: thePalindromes},
             allNone: isSelected
@@ -481,9 +539,24 @@ const newCar = Object.keys(car).reduce((object, key) => {
     };
 
     handleOptionChange = (event: { target: { value: string; }; }) => {
-
+        const palFilterTyperEnum = event.target.value as PalFilterType;
+        let thePalindromes = this.state.dbPalindromes.palindromes.slice();
+        if (palFilterTyperEnum !== PalFilterType.ALL) {
+            // deselect the hidden ones to avoid inadvertent action on them
+            thePalindromes.map((entry) => {
+                entry.selected = this.isPalindrome(entry.cooked) ?
+                    entry.selected && palFilterTyperEnum === PalFilterType.ONLY_PALINDROMES :
+                    entry.selected && palFilterTyperEnum === PalFilterType.NOT_PALINDROMES;
+                return entry;
+            });
+        }
+        let onlyMine = this.state.palfilters.onlyMine;
         this.setState({
-            palfilter: event.target.value
+            dbPalindromes: {palindromes: thePalindromes},
+            palfilters: {
+                palFilterType: palFilterTyperEnum,
+                onlyMine: onlyMine
+            }
         });
     };
 
@@ -525,52 +598,62 @@ const newCar = Object.keys(car).reduce((object, key) => {
                         <div>DB palindromes:</div>
                     </div>
                     <div className={"indent"}>
-                        <div className="radio-button">
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="palfilter"
-                                    value="all"
-                                    checked={this.state.palfilter === "all"}
-                                    onChange={this.handleOptionChange}
-                                    className=""
-                                />
-                                All
-                            </label>
-                        </div>
-                        <div className="radio-button">
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="palfilter"
-                                    value="onlypals"
-                                    checked={this.state.palfilter === "onlypals"}
-                                    onChange={this.handleOptionChange}
-                                    className=""
-                                />
-                                Only Palindromes
-                            </label>
-                        </div>
-                        <div className="radio-button">
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="palfilter"
-                                    value="notpals"
-                                    checked={this.state.palfilter === "notpals"}
-                                    onChange={this.handleOptionChange}
-                                    className=""
-                                />
-                                Only Non-palindromes
-                            </label>
-                        </div>
                         <button className="pal-button"
-                                onClick={ this.deleteSelected }
-                                disabled={ firebase.auth().currentUser!.isAnonymous || this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0 }
+                                onClick={this.deleteSelected}
+                                disabled={firebase.auth().currentUser!.isAnonymous || this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
                         >
                             Delete Selected
                         </button>
-
+                        <div className={"right-just"}>
+                            <span><strong>Filters:&nbsp;</strong></span>
+                            <input
+                                type="checkbox"
+                                name="onlyMine"
+                                checked={this.state.palfilters.onlyMine}
+                                onChange={this.handleOnlyMineChecked}
+                                value={"value"}
+                                className={"checkbox"}
+                            /> Only mine&nbsp;&nbsp;|&nbsp;&nbsp;
+                            <div className="radio-button">
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="palfilter"
+                                        value={PalFilterType.ALL}
+                                        checked={this.state.palfilters.palFilterType === PalFilterType.ALL}
+                                        onChange={this.handleOptionChange}
+                                        className=""
+                                    />
+                                    All
+                                </label>
+                            </div>
+                            <div className="radio-button">
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="palfilter"
+                                        value={PalFilterType.ONLY_PALINDROMES}
+                                        checked={this.state.palfilters.palFilterType === PalFilterType.ONLY_PALINDROMES}
+                                        onChange={this.handleOptionChange}
+                                        className=""
+                                    />
+                                    Only Palindromes
+                                </label>
+                            </div>
+                            <div className="radio-button">
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="palfilter"
+                                        value={PalFilterType.NOT_PALINDROMES}
+                                        checked={this.state.palfilters.palFilterType === PalFilterType.NOT_PALINDROMES}
+                                        onChange={this.handleOptionChange}
+                                        className=""
+                                    />
+                                    Only Non-palindromes
+                                </label>
+                            </div>
+                        </div>
                     </div>
                     <div className="indent">
                         <table className={"list section-border"}>
@@ -610,7 +693,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
                             </thead>
                             <tbody>
                             {this.state.dbPalindromes.palindromes
-                                .filter(pal => this.evaluatePalFilter(pal.raw))
+                                .filter(pal => this.evaluatePalFilters(pal))
                                 .slice().sort((a, b) => this.comparePals(a, b))
                                 .map((item, key) =>
                                     <tr key={key}>
@@ -631,20 +714,25 @@ const newCar = Object.keys(car).reduce((object, key) => {
                                             {item.createTime.toLocaleString()}
                                         </td>
                                         <td>
-                                            {typeof item.user === "string" ? item.user : item.user.uid}
+                                            {this.getUserName(item.user)  }
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
         );
     }
 
-    comparePals = (a:any, b:any) => {
+    getUserName = (user: any) => {
+        // console.log(user);
+       let theJson = JSON.parse(user);
+        return theJson.displayName ? theJson.displayName : theJson.uid;
+    }
+
+    comparePals = (a: any, b: any) => {
         switch (this.state.sortInfo.sortCol) {
             case "createdColumn":
                 return this.state.sortInfo.sortDesc ? b.createTime - a.createTime : a.createTime - b.createTime;
@@ -657,14 +745,14 @@ const newCar = Object.keys(car).reduce((object, key) => {
         }
     };
 
-    reverseString(str:string) {
+    reverseString(str: string) {
         return str.split("").reverse().join("");
     }
 
     /** Removes whitespace, punctuation and diacriticals, then formats with one space between uppercase characters
      * I have found this to be the easiest format for the eye to pick up on word patterns.
      * */
-    normalizeString(str:string) {
+    normalizeString(str: string) {
         return this.stripWhiteSpace(this.stripPunctuation(this.stripDiacriticals(str))).toUpperCase()
             .split("").join(" ");
     }
@@ -674,7 +762,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
      * TODO: Known issues - "ß" which ends up as "ss" not "s" and æ which ends up as "ae" and perhaps some other similar
      *
      * */
-    stripDiacriticals(str:string) {
+    stripDiacriticals(str: string) {
         return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
@@ -683,7 +771,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
      * It's a fairly exhaustive regex I found on the web so it must be correct :)
      *
      * */
-    stripPunctuation(str:string) {
+    stripPunctuation(str: string) {
         return str.replace(
             /[!-/:-@[-`{-~¡-©«-¬®-±´¶-¸»¿×÷˂-˅˒-˟˥-˫˭˯-˿͵;΄-΅·϶҂՚-՟։-֊־׀׃׆׳-״؆-؏؛؞-؟٪-٭۔۩۽-۾܀-܍߶-߹।-॥॰৲-৳৺૱୰௳-௺౿ೱ-ೲ൹෴฿๏๚-๛༁-༗༚-༟༴༶༸༺-༽྅྾-࿅࿇-࿌࿎-࿔၊-၏႞-႟჻፠-፨᎐-᎙᙭-᙮᚛-᚜᛫-᛭᜵-᜶។-៖៘-៛᠀-᠊᥀᥄-᥅᧞-᧿᨞-᨟᭚-᭪᭴-᭼᰻-᰿᱾-᱿᾽᾿-῁῍-῏῝-῟῭-`´-῾\u2000-\u206e⁺-⁾₊-₎₠-₵℀-℁℃-℆℈-℉℔№-℘℞-℣℥℧℩℮℺-℻⅀-⅄⅊-⅍⅏←-⏧␀-␦⑀-⑊⒜-ⓩ─-⚝⚠-⚼⛀-⛃✁-✄✆-✉✌-✧✩-❋❍❏-❒❖❘-❞❡-❵➔➘-➯➱-➾⟀-⟊⟌⟐-⭌⭐-⭔⳥-⳪⳹-⳼⳾-⳿⸀-\u2e7e⺀-⺙⺛-⻳⼀-⿕⿰-⿻\u3000-〿゛-゜゠・㆐-㆑㆖-㆟㇀-㇣㈀-㈞㈪-㉃㉐㉠-㉿㊊-㊰㋀-㋾㌀-㏿䷀-䷿꒐-꓆꘍-꘏꙳꙾꜀-꜖꜠-꜡꞉-꞊꠨-꠫꡴-꡷꣎-꣏꤮-꤯꥟꩜-꩟﬩﴾-﴿﷼-﷽︐-︙︰-﹒﹔-﹦﹨-﹫！-／：-＠［-｀｛-･￠-￦￨-￮￼-�]|\ud800[\udd00-\udd02\udd37-\udd3f\udd79-\udd89\udd90-\udd9b\uddd0-\uddfc\udf9f\udfd0]|\ud802[\udd1f\udd3f\ude50-\ude58]|\ud809[\udc00-\udc7e]|\ud834[\udc00-\udcf5\udd00-\udd26\udd29-\udd64\udd6a-\udd6c\udd83-\udd84\udd8c-\udda9\uddae-\udddd\ude00-\ude41\ude45\udf00-\udf56]|\ud835[\udec1\udedb\udefb\udf15\udf35\udf4f\udf6f\udf89\udfa9\udfc3]|\ud83c[\udc00-\udc2b\udc30-\udc93]/g,
             "");
@@ -692,14 +780,14 @@ const newCar = Object.keys(car).reduce((object, key) => {
     /**
      * Strips all white space
      * */
-    stripWhiteSpace(str:string) {
+    stripWhiteSpace(str: string) {
         return str.replace(/\s/g, "");
     }
 
     /**
      * Checks if str is a plindrome by normalizing it and comparing to its reverse
      * */
-    isPalindrome(str:string) {
+    isPalindrome(str: string) {
         var normal = this.normalizeString(str);
         return normal === this.reverseString(normal);
     }
@@ -711,7 +799,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
      * 2. revese string
      * 3. return array with three strings: before the midpoint, the midpoint or turnaround string, after the midpoint
      * */
-    smooth(str:string) {
+    smooth(str: string) {
         var smooth = this.reverseString(this.normalizeString(str));
         var nChars = (smooth.length + 1) / 2;
         var turnaroundSize = ((nChars % 2) === 0 ? 4 : 3);
@@ -729,7 +817,7 @@ const newCar = Object.keys(car).reduce((object, key) => {
      *  TODO: separate concerns better
      * @returns {string | representing the color class to use for formatting}
      */
-    palindromeClass(str:string) {
+    palindromeClass(str: string) {
         return str ? (this.isPalindrome(str) ? "is-pal" : "not-pal") : "";
     }
 }
