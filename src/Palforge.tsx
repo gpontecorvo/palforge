@@ -357,7 +357,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                     user: theUser
                 });
             });
-            // console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
+//            console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
             this.setState({
                 dbPalindromes: thePalindromes
             });
@@ -698,7 +698,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                 .map((item, key) =>
                                     <tr key={key}>
                                         <td>
-                                            {!(firebase.auth().currentUser!.isAnonymous) && <input
+                                            {(this.getUserName(item.user) === firebase.auth().currentUser!.uid) && <input
                                                 type="checkbox"
                                                 name="listitems"
                                                 checked={item.selected}
