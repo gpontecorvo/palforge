@@ -3,7 +3,6 @@ import {render} from "react-dom";
 import Palforge from "./Palforge"
 
 import {
-   // FirebaseAuthConsumer,
     FirebaseAuthProvider,
     IfFirebaseAuthed,
     IfFirebaseUnAuthed
@@ -11,12 +10,6 @@ import {
 import * as firebase from "firebase/app";
 import {config} from "./firebase";
 import {State} from "react-powerplug";
-// @ts-ignore
-//import functions from "firebase";
-
-
-
-//const concept = "world";
 
 
 const IDontCareAboutFirebaseAuth = () => {
@@ -24,11 +17,11 @@ const IDontCareAboutFirebaseAuth = () => {
 };
 
 const displayUserInfo = (profile: firebase.UserInfo | null, isAnonymous: boolean) => {
-    // console.log("2 " + JSON.stringify(profile));
+    console.log("2 " + JSON.stringify(profile));
     return (
         <div>
             <img className={"profileImg"} alt={"Anonymous"}
-                 src={!isAnonymous ? profile && profile.photoURL : require('./resources/anonymous.png')}/>
+                 src={profile && profile.photoURL || require('./resources/anonymous.png')}/>
             <table>
                 <thead>
                 <tr>
@@ -38,7 +31,7 @@ const displayUserInfo = (profile: firebase.UserInfo | null, isAnonymous: boolean
                 <tbody>
                 <tr>
                     <td>Name:</td>
-                    <td>{!isAnonymous ? profile && profile.displayName : firebase.auth().currentUser!.uid}</td>
+                    <td>{!isAnonymous ? profile && profile.displayName  || profile && profile.email: firebase.auth().currentUser!.uid}</td>
                 </tr>
                 <tr>
                     <td>Email:</td>
@@ -51,7 +44,26 @@ const displayUserInfo = (profile: firebase.UserInfo | null, isAnonymous: boolean
 }
 
 
+// export const accountCreate = functions.auth.user().onCreate((user: { data: { email: any; displayName: any; uid: any; }; }) => {
+//     console.log(user.data);
+//     userDoc = {'email' = user.data.email,
+//         'displayName' = user.data.displayName}
+//     admin.firestore().collection('users').doc(user.data.uid)
+//         .set(userDoc).then(writeResult => {
+//         console.log('User Created result:', writeResult);
+//         return;
+//     }).catch(err => {
+//         console.log(err);
+//         return;
+//     });
+// });
+
+
+
 const App = () => {
+    // firebase.auth().createUserWithEmailAndPassword("gpontecorvo@yahoo.com", "gr8fulDead252561").catch(function(error) {
+    //     console.log(error);
+    // });
     return (
         <div>
             <IDontCareAboutFirebaseAuth/>
@@ -62,7 +74,7 @@ const App = () => {
                             <div>isLoading : {JSON.stringify(state.isLoading)}</div>
                             <IfFirebaseAuthed>
                                 {() => {
-                                    // console.log (JSON.stringify(firebase.auth().currentUser));
+                                    console.log (JSON.stringify(firebase.auth().currentUser));
                                     // @ts-ignore
                                     var isAnonymous = firebase.auth().currentUser.isAnonymous;
                                     return (
@@ -85,9 +97,6 @@ const App = () => {
                                                 </ol>
                                             }
 
-                                            <div>
-                                                <Palforge/>
-                                            </div>
                                             <button
                                                 onClick={async () => {
                                                     setState({isLoading: true});
@@ -100,6 +109,9 @@ const App = () => {
                                             >
                                                 Sign out
                                             </button>
+                                            <div>
+                                                <Palforge/>
+                                            </div>
                                         </div>)
                                 }}
                             </IfFirebaseAuthed>
@@ -129,6 +141,19 @@ const App = () => {
                                                 }}
                                             >
                                                 Sign in with Google
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    setState({isLoading: true});
+                                                   // const emailAuthProvider = new firebase.auth.EmailAuthProvider();
+
+                                                    firebase.auth().signInWithEmailAndPassword("gpontecorvo@yahoo.com", "gr8fulDead252561").catch(function(error) {
+                                                        console.log(error);
+                                                    });
+                                                    setState({isLoading: false});
+                                                }}
+                                            >
+                                                Sign in with email
                                             </button>
                                         </div>)
                                 }}
