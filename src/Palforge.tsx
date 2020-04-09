@@ -229,14 +229,14 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
                 <div>
                     <button className="pal-button"
                             onClick={this.reverseText.bind(this)}
-                            disabled={this.state.text?.trim()!.length === 0}
+                            disabled={this.state.text?.trim()?.length === 0}
                     >
 
                         Reverse input
                     </button>
                     <button className="pal-button"
                             onClick={this.saveText.bind(this)}
-                            disabled={this.state.text?.trim()!.length === 0}
+                            disabled={this.state.text?.trim()?.length === 0}
                     >
                         Save
                     </button>
@@ -312,27 +312,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         // this.setState({
         //     sortInfo: this.props.initialSort.sortInfo
         // });
-// Start listing users from the beginning, 1000 at a time.
-        //this.listAllUsers(null);
     }
-
-    // listAllUsers(nextPageToken) {
-    //     // List batch of users, 1000 at a time.
-    //     admin.auth().listUsers(1000, nextPageToken)
-    //         .then(function(listUsersResult) {
-    //             listUsersResult.users.forEach(function(userRecord) {
-    //                 console.log('user', userRecord.toJSON());
-    //             });
-    //             if (listUsersResult.pageToken) {
-    //                 // List next batch of users.
-    //                 this.listAllUsers(listUsersResult.pageToken);
-    //             }
-    //         })
-    //         .catch(function(error) {
-    //             console.log('Error listing users:', error);
-    //         });
-    // }
-
 
     reloadFromDb() {
         var thePalindromes = {"palindromes": Array()};
@@ -414,7 +394,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     };
 
     addToDb = (str: any) => {
-        const userJSON: any = firebase.auth().currentUser!.toJSON();
+        const userJSON: any = firebase.auth().currentUser?.toJSON();
          const reducedJson = JSON.stringify(Object.keys(userJSON).reduce((obj: any, key) => {
                 if (["uid", "displayName", "photoURL"].includes(key)) {
                     obj[key] = userJSON[key];
@@ -435,15 +415,6 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             .catch(function (error) {
                 console.error("Error adding document: ", error);
             });
-        /*
-        *
-        const newCar = Object.keys(car).reduce((object, key) => {
-          if ([] ]) {
-            object[key] = car[key]
-          }
-          return object
-        }, {})
-        * */
     };
 
     evaluatePalFilters = (palEntry: IDbPalindrome) => {
@@ -463,7 +434,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         if (theUser.startsWith("{")) {
             theUser = JSON.parse(theUser).uid;
         }
-        let onlyMineOk = this.state.palfilters.onlyMine ? (theUser === firebase.auth().currentUser!.uid) : true;
+        let onlyMineOk = this.state.palfilters.onlyMine ? (theUser === firebase.auth().currentUser?.uid) : true;
         return palTypeOk && onlyMineOk;
     };
 
@@ -477,7 +448,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 if (theUser.startsWith("{")) {
                     theUser = JSON.parse(theUser).uid;
                 }
-                let isMine = (theUser === firebase.auth().currentUser!.uid);
+                let isMine = (theUser === firebase.auth().currentUser?.uid);
                 if (!isMine) {
                     entry.selected = false;
                 }
@@ -600,7 +571,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                     <div className={"indent"}>
                         <button className="pal-button"
                                 onClick={this.deleteSelected}
-                                disabled={firebase.auth().currentUser!.isAnonymous || this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
+                                disabled={firebase.auth().currentUser?.isAnonymous || this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
                         >
                             Delete Selected
                         </button>
@@ -698,7 +669,8 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                 .map((item, key) =>
                                     <tr key={key}>
                                         <td>
-                                            {(this.getUserName(item.user) === firebase.auth().currentUser!.uid) && <input
+                                            { this.isCurrentUser(item.user)
+                                            && <input
                                                 type="checkbox"
                                                 name="listitems"
                                                 checked={item.selected}
@@ -724,10 +696,14 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 </div>
             </div>
         );
-    }
+    };
+
+    isCurrentUser = (user: any) => {
+        let theJson = JSON.parse(user);
+        return (theJson.uid === firebase.auth().currentUser?.uid);
+    };
 
     getUserName = (user: any) => {
-        // console.log(user);
        let theJson = JSON.parse(user);
         return theJson.displayName ? theJson.displayName : theJson.uid;
     }
