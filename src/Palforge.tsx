@@ -571,7 +571,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                     <div className={"indent"}>
                         <button className="pal-button"
                                 onClick={this.deleteSelected}
-                                disabled={firebase.auth().currentUser?.isAnonymous || this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
+                                disabled={ this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
                         >
                             Delete Selected
                         </button>
