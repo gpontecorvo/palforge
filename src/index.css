@@ -15,9 +15,17 @@ div {
   margin: 5px;
 }
 
+div .padded {
+  padding: 15px 30px;
+}
+p {
+  margin: 30px;
+}
+
 div .no-margin {
   margin: 0px;
 }
+
 
 .list {
   padding: 0px;

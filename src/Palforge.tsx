@@ -376,7 +376,6 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     };
 
     deleteSelected = () => {
-        console.log("clicked");
         var selected = this.state.dbPalindromes.palindromes.filter(pal => pal.selected);
         selected.map(pal => {
             this.deleteDocument(pal);
@@ -402,7 +401,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 return obj;
             }, {}
         ));
-         console.log("addingtoDB:\n",reducedJson);
+         // console.log("addingtoDB:\n",reducedJson);
         db.collection("palindromes").add({
             raw: str,
             cooked: this.normalizeString(str),
@@ -464,7 +463,6 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             dbPalindromes: {palindromes: thePalindromes}
         });
     };
-
 
     handleChecked = (event: any) => {
         var docId = event.target.value;
@@ -657,7 +655,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                 <ColumnClickDisplay
                                     handleSortOrder={this.handleSortOrder}
                                     columnId={"uidColumn"}
-                                    headerText={"User UID"}
+                                    headerText={"User"}
                                     markerClass={"palListSorter"}
                                 />
                             </tr>

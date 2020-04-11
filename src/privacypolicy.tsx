@@ -2,8 +2,8 @@ import * as React from "react";
 
 
 export const privacypolicy = () => {
-    return <div className={"section-border indent"}>
-            <h2>Palindrome Forge Application Privacy Statement</h2>
+    return <div className={"section-border indent padded"}>
+            <h1>Palindrome Forge Application Privacy Statement</h1>
 
             <p>This privacy statement (“Privacy Statement”) applies to the treatment of personally identifiable information
                 submitted by, or otherwise obtained from, you in connection with the associated application (“Application”). The
@@ -11,7 +11,7 @@ export const privacypolicy = () => {
                 Forge" licensor or partner (“Application Partner”). By using or otherwise accessing the Application, you acknowledge
                 that you accept the practices and policies outlined in this Privacy Statement.</p>
 
-            <h2>WHAT PERSONAL INFORMATION DOES "Palindrome Forge" COLLECT?</h2>
+            <h4>WHAT PERSONAL INFORMATION DOES "Palindrome Forge" COLLECT?</h4>
 
             <p>We collect the following types of information from our users:</p>
 
@@ -27,13 +27,13 @@ export const privacypolicy = () => {
                 information, Facebook user ID, Facebook Page fan status, and URLs accessed. Such information may be shared in
                 aggregate (non-personally identifiable) form with our partners.</p>
 
-            <h2>HOW DOES "Palindrome Forge" USE THE INFORMATION IT COLLECTS?</h2>
+            <h4>HOW DOES "Palindrome Forge" USE THE INFORMATION IT COLLECTS?</h4>
 
             <p>"Palindrome Forge" uses the information described in this Privacy Statement (i) internally, to analyze, develop and
                 improve its products and services, and (ii) as set forth below in the “Will "Palindrome Forge" Share any of the
                 personal information it Collects” section below.</p>
 
-            <h2>APPLICATION PARTNER TREATMENT OF PERSONAL INFORMATION.</h2>
+            <h4>APPLICATION PARTNER TREATMENT OF PERSONAL INFORMATION.</h4>
 
             <p>"Palindrome Forge" may provide personal information to the applicable Application Partner. The Application Partner’s
                 use of your personal information is subject to the Application Partner’s separate privacy policy – and not this
@@ -67,13 +67,13 @@ export const privacypolicy = () => {
             <p>With Your Consent: Except as set forth above, you will be notified when your personal information may be shared with
                 third parties, and will be able to prevent the sharing of this information.</p>
 
-            <h2>CONDITIONS OF USE.</h2>
+            <h4>CONDITIONS OF USE.</h4>
 
             <p>If you decide to use or otherwise access the Application, your use/access and any possible dispute over privacy is
                 subject to this Privacy Statement and our Terms of Use, including limitations on damages, arbitration of disputes,
                 and application of California state law.</p>
 
-            <h2>THIRD PARTY APPLICATIONS/WEBSITES.</h2>
+            <h4>THIRD PARTY APPLICATIONS/WEBSITES.</h4>
 
             <p>The Application may permit you to link to other applications or websites. Such third party applications/websites are
                 not under "Palindrome Forge"’s control, and such links do not constitute an endorsement by "Palindrome Forge" of
@@ -81,7 +81,7 @@ export const privacypolicy = () => {
                 third party application/websites linked to the Application are not covered by this Privacy Statement, and
                 "Palindrome Forge" is not responsible for the privacy or security practices or the content of such websites.</p>
 
-            <h2>WHAT PERSONAL INFORMATION CAN I ACCESS?</h2>
+            <h4>WHAT PERSONAL INFORMATION CAN I ACCESS?</h4>
 
             <p>"Palindrome Forge" allows you to access the following information about you for the purpose of viewing, and in
                 certain situations, updating that information. This list may change in the event the Application changes.</p>
@@ -92,14 +92,14 @@ export const privacypolicy = () => {
                 <li>- User preferences</li>
                 <li>- Application specific data</li>
             </ul>
-            <h2>CAN CHILDREN USE THE APPLICATION?</h2>
+            <h4>CAN CHILDREN USE THE APPLICATION?</h4>
 
             <p>Our site and the services available through "Palindrome Forge" are not intended for children under the age of 13.
                 "Palindrome Forge" does not knowingly or specifically collect information about children under the age of 13 and
                 believes that children of any age should get their parents’ consent before giving out any personal information. We
                 encourage you to participate in your child’s web experience.</p>
 
-            <h2>CHANGES TO THIS PRIVACY STATEMENT.</h2>
+            <h4>CHANGES TO THIS PRIVACY STATEMENT.</h4>
 
             <p>"Palindrome Forge" may amend this Privacy Statement from time to time. Use of information we collect now is subject
                 to the Privacy Statement in effect at the time such information is used. If we make changes in the way we use
@@ -107,7 +107,7 @@ export const privacypolicy = () => {
                 bound by any changes to the Privacy Statement when he or she uses or otherwise accesses the Application after such
                 changes have been first posted.</p>
 
-            <h2>QUESTIONS OR CONCERNS.</h2>
+            <h4>QUESTIONS OR CONCERNS.</h4>
 
             <p>If you have any questions or concerns regarding privacy on our Website, please send us a detailed message at
                 gpontecorvo@gmail.com. We will make every effort to resolve your concerns.</p>

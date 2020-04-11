@@ -79,7 +79,7 @@ const addUserToDb = (user: User.User) => {
         return obj;
     }, {});
 
-    console.log("addingUsertoDB:\n", JSON.stringify(theJson));
+    // console.log("addingUsertoDB:\n", JSON.stringify(theJson));
 
     let db = firebase.firestore();
     db.collection("users").doc(theJson.uid).set({
@@ -168,7 +168,7 @@ const App = () => {
                 <State initial={
                     {
                         // isLoading: false,
-                        currentUserUid: "init",
+                        currentUserUid: "",
                         privacypolicyshown: false
                     }
                 }>
@@ -180,8 +180,8 @@ const App = () => {
                                         className={"even-smaller"}>&copy;2020 Greg Pontecorvo. All rites observed.</span>
                                 </h3>
 
-                                <h5>{state.currentUserUid}</h5>
-                                <button
+                                {/*<h5>{state.currentUserUid}</h5>*/}
+                                <button className="pal-button"
                                     onClick={async () => {
                                         let shown= !state.privacypolicyshown;
                                          setState({
@@ -205,14 +205,14 @@ const App = () => {
 
                                                     var isAnonymous = typeof firebase.auth().currentUser?.isAnonymous == "undefined" ?
                                                         false : firebase.auth().currentUser!.isAnonymous
-                                                    console.log("authed \n", JSON.stringify(firebase.auth().currentUser)); // ? false : firebase.auth().currentUser!.isAnonymous;
+                                                    // console.log("authed \n", JSON.stringify(firebase.auth().currentUser)); // ? false : firebase.auth().currentUser!.isAnonymous;
 
                                                     return (
                                                         <div>
                                                             <h5>Signed in <span role="img"
                                                                                 aria-label="weird emoji">🎉 </span></h5>
                                                             {/*<div>{state.isLoading ? "Loading . . . " : "Loaded"}</div>*/}
-                                                            <div>Current User Id {state.currentUserUid}</div>
+                                                            {/*<div>Current User Id {state.currentUserUid}</div>*/}
                                                             {
                                                                 displayUserInfo(firebase.auth().currentUser?.providerData ?
                                                                     firebase.auth().currentUser!.providerData[0] :
@@ -234,7 +234,7 @@ const App = () => {
                                                                 // </ol>
                                                             }
 
-                                                            <button
+                                                            <button className="pal-button"
                                                                 onClick={async () => {
                                                                     // setState({isLoading: true});
                                                                     // var prevUserId = state.currentUserUid;
@@ -243,7 +243,7 @@ const App = () => {
                                                                     // removeAnonymousData(prevUserId);
                                                                     setState({
                                                                         // isLoading: false,
-                                                                        currentUserUid: "none"
+                                                                        currentUserUid: ""
                                                                     });
                                                                 }}
                                                             >
@@ -259,7 +259,7 @@ const App = () => {
                                                 {() => {
                                                     return (
                                                         <div>
-                                                            <h2>You're not signed in </h2>
+                                                            <h5>You're not signed in </h5>
                                                             {/*<button*/}
                                                             {/*    onClick={async () => {*/}
                                                             {/*        // setState({isLoading: true});*/}
@@ -275,7 +275,7 @@ const App = () => {
                                                             {/*>*/}
                                                             {/*    Sign in anonymously*/}
                                                             {/*</button>*/}
-                                                            <button
+                                                            <button className="pal-button"
                                                                 onClick={async () => {
                                                                     // setState({isLoading: true});
                                                                     const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
@@ -288,7 +288,7 @@ const App = () => {
                                                             >
                                                                 Sign in with Google
                                                             </button>
-                                                            <button
+                                                            <button className="pal-button"
                                                                 onClick={async () => {
                                                                     // setState({isLoading: true});
                                                                     const provider = new firebase.auth.FacebookAuthProvider();
