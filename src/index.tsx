@@ -275,6 +275,7 @@ const App = () => {
                                                             {/*>*/}
                                                             {/*    Sign in anonymously*/}
                                                             {/*</button>*/}
+                                                            <div className={"button-with-icon"}>
                                                             <button className="pal-button"
                                                                 onClick={async () => {
                                                                     // setState({isLoading: true});
@@ -286,9 +287,12 @@ const App = () => {
                                                                     });
                                                                 }}
                                                             >
-                                                                Sign in with Google
+                                                                <span className={"button-with-icon"}>Sign in with Google</span>&nbsp;&nbsp;<img alt={"Google"} height={"30px"}
+                                                                                        src={require('./resources/google.png')}/>
                                                             </button>
-                                                            <button className="pal-button"
+                                                            </div>
+                                                            <div className={"button-with-icon"}>
+                                                                <button className="pal-button button-with-icon"
                                                                 onClick={async () => {
                                                                     // setState({isLoading: true});
                                                                     const provider = new firebase.auth.FacebookAuthProvider();
@@ -320,8 +324,10 @@ const App = () => {
                                                                     });
                                                                 }}
                                                             >
-                                                                Sign in with Fscebook
+                                                                    <span className={"button-with-icon"}>Sign in with Facebook&nbsp;&nbsp;</span><img alt={"FB"} height={"25px"}
+                                                                                          src={require('./resources/facebook.jpeg')}/>
                                                             </button>
+                                                            </div>
                                                             {/*<button*/}
                                                             {/*    onClick={async () => {*/}
                                                             {/*        // setState({isLoading: true});*/}

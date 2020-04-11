@@ -191,3 +191,9 @@ table, td, th {
 .right-just {
   float: right;
 }
+
+.button-with-icon {
+  display: inline-block;
+  padding-top: 10px;
+  vertical-align: top;
+}
