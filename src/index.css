@@ -8,9 +8,9 @@ body {
 .privacypolicy {
   font: 10px "Century Gothic", Futura, sans-serif;
   background-color: #fefefe;
-  margin: 20px;
-   width: 600px;
-  height: 300px;
+  margin: 20px auto;
+   width: 70%;
+  height: 500px;
   overflow: scroll;
 }
 
@@ -93,6 +93,9 @@ div .no-margin {
 .not-pal {
   background-color: #eedddd;
 }
+.auth-content {
+  margin-top: 50px;
+}
 
 .input-area {
   padding: 10px;
@@ -141,6 +144,7 @@ div .no-margin {
 .even-smaller {
   font-size: xx-small;
 }
+
 
 .radio-button {
   margin: 5px ;
@@ -197,6 +201,18 @@ table, td, th {
 }
 .right-just {
   float: right;
+}
+.left-just {
+  float: left;
+}
+.clear-float {
+  float: none;
+}
+
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
 }
 
 .button-with-icon {
