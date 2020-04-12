@@ -5,6 +5,14 @@ body {
   margin: 20px;
   width: auto;
 }
+.privacypolicy {
+  font: 10px "Century Gothic", Futura, sans-serif;
+  background-color: #fefefe;
+  margin: 20px;
+   width: 600px;
+  height: 300px;
+  overflow: scroll;
+}
 
 .palforge {
   display: flex;
@@ -15,14 +23,27 @@ div {
   margin: 5px;
 }
 
+div .padded {
+  padding: 15px 30px;
+}
+p {
+  margin: 5px;
+}
+
+div .no-margin {
+  margin: 0px;
+}
+
+
 .list {
   padding: 0px;
   margin-top: -5px;
-
 }
+
 .list-item {
   border: 1px solid black;
   padding: 0px 5px;
+  /*display: inline-block;*/
 }
 
 .pal-button {
@@ -41,6 +62,12 @@ div {
   text-decoration:none;
   text-shadow:0px 1px 0px #283966;
 }
+
+.pal-button:disabled, .pal-button:hover:disabled  {
+  background: none;
+  background-color:#aaccee;
+
+}
 .pal-button:hover {
   background:linear-gradient(to bottom, #476e9e 5%, #7892c2 100%);
   background-color:#476e9e;
@@ -58,7 +85,6 @@ div {
 .palindrome-input {
   height: 8em;
   width: 35em;
-  border: thick red;
 }
 
 .is-pal {
@@ -73,7 +99,7 @@ div {
   background-color: #ededcb;
 }
 .section-border {
-  border: #283966 2px solid;
+  border: #283966 1px solid;
 }
 
 
@@ -114,4 +140,67 @@ div {
  }
 .even-smaller {
   font-size: xx-small;
+}
+
+.radio-button {
+  margin: 5px ;
+  display: inline-block;
+}
+
+.checkbox {
+   display: inline-block;
+   margin: 7px;
+ }
+
+.profileImg {
+  height: 60px;
+  display: inline-block;
+  float: left;
+  margin: 3px;
+}
+table, td, th {
+  border: thin black solid;
+  border-collapse: collapse;
+  padding: 3px 5px;
+}
+.arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+
+  border-bottom: 7px solid black;
+}
+
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+
+  border-top: 7px solid #000;
+}
+
+.seen {
+  display: inline-block;
+}
+
+.not-seen {
+   display: none;
+ }
+
+.overlay {
+  height:0px;
+  overflow:visible;
+  pointer-events:none;
+  background:none !important;
+}
+.right-just {
+  float: right;
+}
+
+.button-with-icon {
+  display: inline-block;
+  padding-top: 10px;
+  vertical-align: top;
 }
