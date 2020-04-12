@@ -2,8 +2,8 @@ import * as React from "react";
 
 
 export const privacypolicy = () => {
-    return <div className={"section-border indent padded"}>
-            <h1>Palindrome Forge Application Privacy Statement</h1>
+    return <div className={"privacypolicy section-border padded "}>
+            <h2>Palindrome Forge Application Privacy Statement</h2>
 
             <p>This privacy statement (“Privacy Statement”) applies to the treatment of personally identifiable information
                 submitted by, or otherwise obtained from, you in connection with the associated application (“Application”). The
@@ -113,5 +113,6 @@ export const privacypolicy = () => {
                 gpontecorvo@gmail.com. We will make every effort to resolve your concerns.</p>
 
             <p>Effective Date: April 10, 2020</p>
+
     </div>;
 };

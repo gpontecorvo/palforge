@@ -5,6 +5,14 @@ body {
   margin: 20px;
   width: auto;
 }
+.privacypolicy {
+  font: 10px "Century Gothic", Futura, sans-serif;
+  background-color: #fefefe;
+  margin: 20px;
+   width: 600px;
+  height: 300px;
+  overflow: scroll;
+}
 
 .palforge {
   display: flex;
@@ -19,7 +27,7 @@ div .padded {
   padding: 15px 30px;
 }
 p {
-  margin: 30px;
+  margin: 5px;
 }
 
 div .no-margin {
@@ -77,7 +85,6 @@ div .no-margin {
 .palindrome-input {
   height: 8em;
   width: 35em;
-  border: thick red;
 }
 
 .is-pal {
@@ -92,7 +99,7 @@ div .no-margin {
   background-color: #ededcb;
 }
 .section-border {
-  border: #283966 2px solid;
+  border: #283966 1px solid;
 }
 
 
