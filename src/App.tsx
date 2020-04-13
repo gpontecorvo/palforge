@@ -1,5 +1,7 @@
 import * as React from "react";
 import Palforge from "./Palforge"
+import './index.css';
+import './App.css';
 
 import {
     FirebaseAuthProvider,
@@ -12,6 +14,7 @@ import {config} from "./firebase";
 import {State} from "react-powerplug";
 import User from "firebase";
 import {privacypolicy} from "./privacypolicy";
+import Popup from "./Popup";
 
 const APP_TITLE = "The Palindrome Forge";
 
@@ -133,192 +136,232 @@ export const App = () => {
                 <State initial={
                     {
                         currentUserUid: "",
-                        privacypolicyshown: false
+                        privacypolicyshown: false,
+                        showPopup: false
                     }
                 }>
                     {({state, setState}) => (
                         <React.Fragment>
                             <div>
-                                <h3>The Palindrome Forge</h3>
-                                    <div
-                                        className={"smaller"}>version {require('../package.json').version}</div>
-                                    <div
-                                        className={"even-smaller"}>&copy;2020 Greg Pontecorvo. All rites observed.</div>
+                                <div className={"left-just"}>
+                                    <img className={"App-logo"} alt={"logo"} height={"50px"}
+                                         src={require('./resources/ourobouros.png')}/>
 
+                                </div>
+                                <div>
+                                    <table className={"app-banner"}>
 
-                                <div><a href="#!"
-                                        onClick={ () => {
-                                            let shown = !state.privacypolicyshown;
-                                            setState({
-                                                privacypolicyshown: shown
-                                            });
-                                        }}
-                                >
-                                    {(state.privacypolicyshown ? "Hide" : "Show") + " privacy policy"}
-                                </a></div>
+                                        <thead>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td colSpan={2}>
+                                                <span className="app-title">The Palindrome Forge</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span className={"smaller"}>version {require('../package.json').version}</span>
+                                            </td>
+                                            <td>
+                                                 <span className={"even-smaller"}>&copy;2020 Greg Pontecorvo. All rites observed.</span>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                        <tfoot></tfoot>
+                                    </table>
+                                    <span>
+                                                <span className={""}>
+                                                    <a href="#" onClick={() => {
+                                                        let shown = !state.showPopup;
+                                                        setState({
+                                                            showPopup: shown
+                                                        });
+                                                    }}>Show Privacy Policy
+                                                    </a>
 
-                                <div className={state.privacypolicyshown ? "seen" : "not-seen"}>{privacypolicy()}</div>
-
+                                                    {
+                                                        state.showPopup &&
+                                                        <Popup
+                                                            html={privacypolicy()}
+                                                            buttonText={"Hide Privacy Policy"}
+                                                            closePopup={() => {
+                                                                let shown = !state.showPopup;
+                                                                setState({
+                                                                    showPopup: shown
+                                                                })
+                                                            }}
+                                                        />
+                                                    }
+                                                </span>
+                                    </span>
+                                </div>
                             </div>
-                            <FirebaseAuthProvider {...config} firebase={firebase}>
-                                {() => {
-                                    return (
-                                        <div>
-                                            <IfFirebaseAuthed>
-                                                {() => {
-                                                    // console.log (JSON.stringify(firebase.auth().currentUser));
+                            <div className={"auth-content"}>
+                                <FirebaseAuthProvider {...config} firebase={firebase}>
+                                    {() => {
+                                        return (
+                                            <div>
+                                                <IfFirebaseAuthed>
+                                                    {() => {
+                                                        // console.log (JSON.stringify(firebase.auth().currentUser));
 
-                                                    var isAnonymous = typeof firebase.auth().currentUser?.isAnonymous == "undefined" ?
-                                                        false : firebase.auth().currentUser!.isAnonymous
-                                                    // console.log("authed \n", JSON.stringify(firebase.auth().currentUser)); // ? false : firebase.auth().currentUser!.isAnonymous;
+                                                        var isAnonymous = typeof firebase.auth().currentUser?.isAnonymous == "undefined" ?
+                                                            false : firebase.auth().currentUser!.isAnonymous
+                                                        // console.log("authed \n", JSON.stringify(firebase.auth().currentUser)); // ? false : firebase.auth().currentUser!.isAnonymous;
 
-                                                    return (
-                                                        <div>
-                                                            <h5>Signed in <span role="img"
-                                                                                aria-label="weird emoji">🎉 </span></h5>
-                                                            {/*<div>{state.isLoading ? "Loading . . . " : "Loaded"}</div>*/}
-                                                            {/*<div>Current User Id {state.currentUserUid}</div>*/}
-                                                            {
-                                                                displayUserInfo(firebase.auth().currentUser?.providerData ?
-                                                                    firebase.auth().currentUser!.providerData[0] :
-                                                                    null, isAnonymous)
-                                                                // may need this is linking anonymous to another user
-                                                                // <ol>
-                                                                //
-                                                                //     {
-                                                                //         (isAnonymous) ?
-                                                                //             <li>{displayUserInfo(null, isAnonymous)}</li> :
-                                                                //
-                                                                //
-                                                                //             firebase.auth().currentUser!.providerData.map((profile, i) => {
-                                                                //                 return <li
-                                                                //                     key={i}>{displayUserInfo(profile, isAnonymous)}</li>;
-                                                                //             })
-                                                                //
-                                                                //     }
-                                                                // </ol>
-                                                            }
+                                                        return (
+                                                            <div>
+                                                                <div className={"left-just"}>Signed in as:&nbsp;</div>
+                                                                <div className={"left-just"}>
+                                                                    {
 
-                                                            <button className="pal-button"
-                                                                    onClick={async () => {
-                                                                        // setState({isLoading: true});
-                                                                        // var prevUserId = state.currentUserUid;
-                                                                        // console.log("in signout onclick ", prevUserId);
-                                                                        await firebase.auth().signOut();
-                                                                        // removeAnonymousData(prevUserId);
-                                                                        setState({
-                                                                            // isLoading: false,
-                                                                            currentUserUid: ""
-                                                                        });
-                                                                    }}
-                                                            >
-                                                                Sign out
-                                                            </button>
-                                                            <div className={"palForge"}>
-                                                                <Palforge/>
-                                                            </div>
-                                                        </div>)
-                                                }}
-                                            </IfFirebaseAuthed>
-                                            <IfFirebaseUnAuthed>
-                                                {() => {
-                                                    return (
-                                                        <div>
-                                                            <h5>You're not signed in </h5>
-                                                            {/*         Anonymous (future)          */}
-                                                            {/*<button*/}
-                                                            {/*    onClick={async () => {*/}
-                                                            {/*        // setState({isLoading: true});*/}
-                                                            {/*        await firebase*/}
-                                                            {/*            //.app()*/}
-                                                            {/*            .auth()*/}
-                                                            {/*            .signInAnonymously();*/}
-                                                            {/*        setState({*/}
-                                                            {/*            // isLoading: false,*/}
-                                                            {/*            currentUserUid: firebase.auth().currentUser!.uid*/}
-                                                            {/*        });*/}
-                                                            {/*    }}*/}
-                                                            {/*>*/}
-                                                            {/*    Sign in anonymously*/}
-                                                            {/*</button>*/}
-                                                            <div className={"button-with-icon"}>
-                                                                <button className="pal-button"
-                                                                        onClick={async () => {
-                                                                            // setState({isLoading: true});
-                                                                            const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
-                                                                            firebase.auth().signInWithPopup(googleAuthProvider);
-                                                                            setState({
-                                                                                // isLoading: false,
-                                                                                currentUserUid: firebase.auth().currentUser?.uid
-                                                                            });
-                                                                        }}
-                                                                >
-                                                                    <span className={"button-with-icon"}>Sign in with Google</span>&nbsp;&nbsp;
-                                                                    <img alt={"Google"} height={"30px"}
-                                                                         src={require('./resources/google.png')}/>
-                                                                </button>
-                                                            </div>
-                                                            <div className={"button-with-icon"}>
-                                                                <button className="pal-button button-with-icon"
-                                                                        onClick={async () => {
-                                                                            // setState({isLoading: true});
-                                                                            const provider = new firebase.auth.FacebookAuthProvider();
-                                                                            firebase.auth().signInWithPopup(provider).then(function (result) {
-                                                                                // This gives you a Facebook Access Token. You can use it to access the Facebook API.
-                                                                                // var token = result.credential.accessToken;
-                                                                                // The signed-in user info.
-                                                                                var user = result.user;
+                                                                        displayUserInfo(firebase.auth().currentUser?.providerData ?
+                                                                            firebase.auth().currentUser!.providerData[0] :
+                                                                            null, isAnonymous)
+                                                                        // may need this is linking anonymous to another user
+                                                                        // <ol>
+                                                                        //
+                                                                        //     {
+                                                                        //         (isAnonymous) ?
+                                                                        //             <li>{displayUserInfo(null, isAnonymous)}</li> :
+                                                                        //
+                                                                        //
+                                                                        //             firebase.auth().currentUser!.providerData.map((profile, i) => {
+                                                                        //                 return <li
+                                                                        //                     key={i}>{displayUserInfo(profile, isAnonymous)}</li>;
+                                                                        //             })
+                                                                        //
+                                                                        //     }
+                                                                        // </ol>
+                                                                    }
+                                                                </div>
+
+                                                                <div className={"left-just"}>
+                                                                    <button className="pal-button"
+                                                                            onClick={async () => {
+                                                                                // setState({isLoading: true});
+                                                                                // var prevUserId = state.currentUserUid;
+                                                                                // console.log("in signout onclick ", prevUserId);
+                                                                                await firebase.auth().signOut();
+                                                                                // removeAnonymousData(prevUserId);
                                                                                 setState({
                                                                                     // isLoading: false,
-                                                                                    currentUserUid: user!.uid
+                                                                                    currentUserUid: ""
                                                                                 });
-                                                                            }).catch(function (error) {
-                                                                                // Handle Errors here.
-                                                                                var errorCode = error.code;
-                                                                                var errorMessage = error.message;
-                                                                                // The email of the user's account used.
-                                                                                var email = error.email;
-                                                                                // The firebase.auth.AuthCredential type that was used.
-                                                                                var credential = error.credential;
+                                                                            }}
+                                                                    >
+                                                                        Sign out
+                                                                    </button>
+                                                                </div>
+                                                                <div className={"clear-float clearfix"}></div>
+                                                                <div className={"palForge"}>
+                                                                    <Palforge/>
+                                                                </div>
 
-                                                                                console.log("==== FB login error =====\n",
-                                                                                    errorCode, "\n",
-                                                                                    errorMessage, "\n",
-                                                                                    email, "\n",
-                                                                                    credential, "\n",
-                                                                                    "==== =========== =====\n")
-                                                                                // ...
-                                                                            });
-                                                                        }}
-                                                                >
-                                                                    <span className={"button-with-icon"}>Sign in with Facebook&nbsp;&nbsp;</span><img
-                                                                    alt={"FB"} height={"25px"}
-                                                                    src={require('./resources/facebook.jpeg')}/>
-                                                                </button>
-                                                            </div>
-                                                            {/*     Email/Password  (future)          */}
-                                                            {/*<button*/}
-                                                            {/*    onClick={async () => {*/}
-                                                            {/*        // setState({isLoading: true});*/}
-                                                            {/*        // const emailAuthProvider = new firebase.auth.EmailAuthProvider();*/}
+                                                            </div>)
+                                                    }}
+                                                </IfFirebaseAuthed>
+                                                <IfFirebaseUnAuthed>
+                                                    {() => {
+                                                        return (
+                                                            <div>
+                                                                <h5>You're not signed in </h5>
+                                                                {/*         Anonymous (future)          */}
+                                                                {/*<button*/}
+                                                                {/*    onClick={async () => {*/}
+                                                                {/*        // setState({isLoading: true});*/}
+                                                                {/*        await firebase*/}
+                                                                {/*            //.app()*/}
+                                                                {/*            .auth()*/}
+                                                                {/*            .signInAnonymously();*/}
+                                                                {/*        setState({*/}
+                                                                {/*            // isLoading: false,*/}
+                                                                {/*            currentUserUid: firebase.auth().currentUser!.uid*/}
+                                                                {/*        });*/}
+                                                                {/*    }}*/}
+                                                                {/*>*/}
+                                                                {/*    Sign in anonymously*/}
+                                                                {/*</button>*/}
+                                                                <div className={"button-with-icon"}>
+                                                                    <button className="pal-button"
+                                                                            onClick={async () => {
+                                                                                // setState({isLoading: true});
+                                                                                const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
+                                                                                firebase.auth().signInWithPopup(googleAuthProvider);
+                                                                                setState({
+                                                                                    // isLoading: false,
+                                                                                    currentUserUid: firebase.auth().currentUser?.uid
+                                                                                });
+                                                                            }}
+                                                                    >
+                                                                        <span className={"button-with-icon"}>Sign in with Google</span>&nbsp;&nbsp;
+                                                                        <img alt={"Google"} height={"30px"}
+                                                                             src={require('./resources/google.png')}/>
+                                                                    </button>
+                                                                </div>
+                                                                <div className={"button-with-icon"}>
+                                                                    <button className="pal-button button-with-icon"
+                                                                            onClick={async () => {
+                                                                                // setState({isLoading: true});
+                                                                                const provider = new firebase.auth.FacebookAuthProvider();
+                                                                                firebase.auth().signInWithPopup(provider).then(function (result) {
+                                                                                    // This gives you a Facebook Access Token. You can use it to access the Facebook API.
+                                                                                    // var token = result.credential.accessToken;
+                                                                                    // The signed-in user info.
+                                                                                    var user = result.user;
+                                                                                    setState({
+                                                                                        // isLoading: false,
+                                                                                        currentUserUid: user!.uid
+                                                                                    });
+                                                                                }).catch(function (error) {
+                                                                                    // Handle Errors here.
+                                                                                    var errorCode = error.code;
+                                                                                    var errorMessage = error.message;
+                                                                                    // The email of the user's account used.
+                                                                                    var email = error.email;
+                                                                                    // The firebase.auth.AuthCredential type that was used.
+                                                                                    var credential = error.credential;
 
-                                                            {/*        firebase.auth().signInWithEmailAndPassword("gpontecorvo@yahoo.com", "gr8fulDead252561").catch(function (error) {*/}
-                                                            {/*            console.log(error);*/}
-                                                            {/*        });*/}
-                                                            {/*        setState({*/}
-                                                            {/*            // isLoading: false,*/}
-                                                            {/*            currentUserUid: firebase.auth().currentUser?.uid*/}
-                                                            {/*        });*/}
-                                                            {/*    }}*/}
-                                                            {/*>*/}
-                                                            {/*    Sign in with email*/}
-                                                            {/*</button>*/}
-                                                        </div>)
-                                                }}
-                                            </IfFirebaseUnAuthed>
-                                        </div>)
-                                }}
-                            </FirebaseAuthProvider>
+                                                                                    console.log("==== FB login error =====\n",
+                                                                                        errorCode, "\n",
+                                                                                        errorMessage, "\n",
+                                                                                        email, "\n",
+                                                                                        credential, "\n",
+                                                                                        "==== =========== =====\n")
+                                                                                    // ...
+                                                                                });
+                                                                            }}
+                                                                    >
+                                                                        <span className={"button-with-icon"}>Sign in with Facebook&nbsp;&nbsp;</span><img
+                                                                        alt={"FB"} height={"25px"}
+                                                                        src={require('./resources/facebook.jpeg')}/>
+                                                                    </button>
+                                                                </div>
+                                                                {/*     Email/Password  (future)          */}
+                                                                {/*<button*/}
+                                                                {/*    onClick={async () => {*/}
+                                                                {/*        // setState({isLoading: true});*/}
+                                                                {/*        // const emailAuthProvider = new firebase.auth.EmailAuthProvider();*/}
+
+                                                                {/*        firebase.auth().signInWithEmailAndPassword("gpontecorvo@yahoo.com", "gr8fulDead252561").catch(function (error) {*/}
+                                                                {/*            console.log(error);*/}
+                                                                {/*        });*/}
+                                                                {/*        setState({*/}
+                                                                {/*            // isLoading: false,*/}
+                                                                {/*            currentUserUid: firebase.auth().currentUser?.uid*/}
+                                                                {/*        });*/}
+                                                                {/*    }}*/}
+                                                                {/*>*/}
+                                                                {/*    Sign in with email*/}
+                                                                {/*</button>*/}
+                                                            </div>)
+                                                    }}
+                                                </IfFirebaseUnAuthed>
+                                            </div>)
+                                    }}
+                                </FirebaseAuthProvider>
+                            </div>
                         </React.Fragment>
                     )}
                 </State>

@@ -294,10 +294,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
 
         let haveInput = this.state.palindrome.length > 0;
         let smoothedParts = this.smooth(this.state.palindrome);
-        let smoothHtml = [];
-        smoothHtml.push(<span>{smoothedParts[0]}</span>,
-            <span className="midpoint">{smoothedParts[1]}</span>,
-            <span>{smoothedParts[2]}</span>);
+        smoothedParts[1] = <span className={"midpoint"}>{smoothedParts[1]}</span>
 
         return (
             <div>
@@ -305,22 +302,24 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 <div
                     className={"input-area section-border"}>
                     {/*bind methods for the child */}
-                    <TextInput
-                        onChange={this.onChange.bind(this)}
-                        reverseText={this.reverseText.bind(this)}
-                        saveText={this.saveText.bind(this)}
-                        // clearSaved={this.clearSaved.bind(this)}
-                        checkPalindrome={this.checkPalindrome.bind(this)}
+                    <TextInput onChange={this.onChange.bind(this)}
+                               reverseText={this.reverseText.bind(this)}
+                               saveText={this.saveText.bind(this)}
+                               checkPalindrome={this.checkPalindrome.bind(this)}
                     />
                 </div>
                 {haveInput &&
                 <div>
-                    <div>Input as typed:</div>
-                    <div
-                        className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{this.state.palindrome} </div>
-                    <div>Reversed input: (Turnaround is <strong>{smoothedParts[1]}</strong>)</div>
-                    <div
-                        className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothHtml}</div>
+                    <div>
+                        <label>Input as typed
+                            <div placeholder="Input As Typed" className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>
+                                {this.state.palindrome}
+                            </div>
+                        </label>
+                    </div>
+                    <div placeholder={"Turnaround"}>Reversed input: (Turnaround is {smoothedParts[1]})</div>
+                    <div placeholder="Reversed Input"
+                        className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothedParts}</div>
                 </div>}
 
                 <div>
@@ -387,7 +386,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                         </div>
                     </div>
                     <div className="indent">
-                        <table className={"list section-border"}>
+                        <table className={"list section-border palindrome-list"}>
                             <thead>
                             <tr>
                                 <th>
@@ -539,11 +538,11 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
      * 2. revese string
      * 3. return array with three strings: before the midpoint, the midpoint or turnaround string, after the midpoint
      * */
-    smooth(str: string) {
+    smooth(str: any) {
         var smooth = this.reverseString(this.normalizeString(str));
         var nChars = (smooth.length + 1) / 2;
         var turnaroundSize = ((nChars % 2) === 0 ? 4 : 3);
-        var parts = [];
+        var parts = Array();
         parts.push(smooth.substring(0, nChars - turnaroundSize));
         parts.push(smooth.substring(nChars - turnaroundSize, (nChars - turnaroundSize) + turnaroundSize * 2));
         parts.push(smooth.substring((nChars - turnaroundSize) + turnaroundSize * 2));
