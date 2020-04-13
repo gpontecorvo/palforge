@@ -65,7 +65,7 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
 
             <div>
                 <div>
-                    <textarea className="palindrome-input" onChange={this.onChange.bind(this)}
+                    <textarea placeholder={"Enter text"} className="palindrome-input" onChange={this.onChange.bind(this)}
                               value={this.state.text}/>
                 </div>
                 {
