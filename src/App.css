@@ -3,7 +3,7 @@
 }
 
 .App-logo {
-    height: 10vmin;
+    height: 7vmin;
     pointer-events: none;
 }
 
@@ -39,7 +39,12 @@
 
 table.app-banner td {
     vertical-align: top;
-    /*background-color: red;*/
+}
+
+table.app-banner {
+    display: inline;
+    vertical-align: bottom;
+    margin-right: 300px;
 }
 
 table.app-banner, table.app-banner tr td {
@@ -49,6 +54,7 @@ table.app-banner, table.app-banner tr td {
 .app-title {
     font-size: x-large;
     font-weight: bold;
+    text-shadow: 4px 4px 8px #aaa;
 }
 
 .simple-list {

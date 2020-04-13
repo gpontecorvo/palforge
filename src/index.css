@@ -4,6 +4,7 @@ body {
   background-color: #eeeeee;
   margin: 20px;
   width: auto;
+  text-shadow: 1px 1px 1px #aaa;
 }
 .privacypolicy {
   font: 10px "Century Gothic", Futura, sans-serif;
@@ -12,6 +13,7 @@ body {
    width: 70%;
   height: 500px;
   overflow: scroll;
+  text-shadow: none;
 }
 
 .palforge {
@@ -60,7 +62,7 @@ div .no-margin {
   padding:6px 18px;
   margin:3px ;
   text-decoration:none;
-  text-shadow:0px 1px 0px #283966;
+  text-shadow:1px 1px 1px #283966;
 }
 
 .pal-button:disabled, .pal-button:hover:disabled  {
@@ -99,7 +101,7 @@ div .no-margin {
 
 .input-area {
   padding: 10px;
-  background-color: #ededcb;
+  background-color: #cccfcc;
 }
 .section-border {
   border: #283966 1px solid;
@@ -219,4 +221,28 @@ table, td, th {
   display: inline-block;
   padding-top: 10px;
   vertical-align: top;
+}
+
+table.palindrome-list th {
+  background-color: #dddddd;
+}
+table.palindrome-list {
+  border: solid 1px #888;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font: normal 13px Arial, sans-serif;
+}
+table.palindrome-list thead th {
+  background-color: #DDDDDD;
+  border: solid 1px #888;
+  color: #336B6B;
+  padding: 10px;
+  text-align: left;
+  /*text-shadow: 1px 1px 2px #aaa;*/
+}
+table.palindrome-list tbody td {
+  border: solid 1px #888;
+  color: #333;
+  padding: 10px;
+  /*text-shadow: 1px 1px 2px #aaa;*/
 }

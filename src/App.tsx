@@ -155,7 +155,7 @@ export const App = () => {
                                         </thead>
                                         <tbody>
                                         <tr>
-                                            <td colSpan={3}>
+                                            <td colSpan={2}>
                                                 <span className="app-title">The Palindrome Forge</span>
                                             </td>
                                         </tr>
@@ -166,7 +166,11 @@ export const App = () => {
                                             <td>
                                                  <span className={"even-smaller"}>&copy;2020 Greg Pontecorvo. All rites observed.</span>
                                             </td>
-                                            <td>
+                                        </tr>
+                                        </tbody>
+                                        <tfoot></tfoot>
+                                    </table>
+                                    <span>
                                                 <span className={""}>
                                                     <a href="#" onClick={() => {
                                                         let shown = !state.showPopup;
@@ -176,7 +180,8 @@ export const App = () => {
                                                     }}>Show Privacy Policy
                                                     </a>
 
-                                                    {state.showPopup ?
+                                                    {
+                                                        state.showPopup &&
                                                         <Popup
                                                             html={privacypolicy()}
                                                             buttonText={"Hide Privacy Policy"}
@@ -187,14 +192,9 @@ export const App = () => {
                                                                 })
                                                             }}
                                                         />
-                                                        : null
                                                     }
                                                 </span>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                        <tfoot></tfoot>
-                                    </table>
+                                    </span>
                                 </div>
                             </div>
                             <div className={"auth-content"}>
@@ -212,9 +212,7 @@ export const App = () => {
 
                                                         return (
                                                             <div>
-                                                                <div className={"left-just"}>Signed in <span role="img"
-                                                                                                             aria-label="weird emoji">🎉 </span> as:
-                                                                </div>
+                                                                <div className={"left-just"}>Signed in as:&nbsp;</div>
                                                                 <div className={"left-just"}>
                                                                     {
 

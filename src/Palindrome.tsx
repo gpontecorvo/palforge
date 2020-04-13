@@ -387,7 +387,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                         </div>
                     </div>
                     <div className="indent">
-                        <table className={"list section-border"}>
+                        <table className={"list section-border palindrome-list"}>
                             <thead>
                             <tr>
                                 <th>
