@@ -91,7 +91,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 var theCreateTime = new Date(1000 * Number(`${doc.data().createTime.seconds}`));
                 thePalindromes.palindromes.push({
                     "raw": theRaw,
-                    "cooked": theCooked,
+                    "cooked": this.normalizeString(theCooked),
                     id: theId,
                     selected: false,
                     createTime: theCreateTime,
@@ -166,7 +166,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         // console.log("addingtoDB:\n",reducedJson);
         db.collection("palindromes").add({
             raw: str,
-            cooked: this.normalizeString(str),
+            cooked: this.stripWhiteSpace(this.normalizeString(str)), // save space in DB, remove spaces
             createTime: firestore.Timestamp.fromDate(new Date()),
             user: reducedJson,
         })
