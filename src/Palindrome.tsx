@@ -32,6 +32,7 @@ interface IPalindromeState {
     palfilters: {
         palFilterType: PalFilterType;
         onlyMine: boolean;
+        textFilter: string;
     }
     allNone: boolean;
     columnState: IColumnClickDisplayState
@@ -57,7 +58,8 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             dbPalindromes: {"palindromes": []},
             palfilters: {
                 palFilterType: PalFilterType.ALL,
-                onlyMine: false
+                onlyMine: false,
+                textFilter: "",
             },
             allNone: false,
             columnState: {
@@ -155,7 +157,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     addToDb = (str: any) => {
         const userJSON: any = firebase.auth().currentUser?.toJSON();
         const reducedJson = JSON.stringify(Object.keys(userJSON).reduce((obj: any, key) => {
-                if (["uid", "displayName", "photoURL"].includes(key)) {
+                if (["uid", "displayName"].includes(key)) {
                     obj[key] = userJSON[key];
                 }
                 return obj;
@@ -194,7 +196,36 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             theUser = JSON.parse(theUser).uid;
         }
         let onlyMineOk = this.state.palfilters.onlyMine ? (theUser === firebase.auth().currentUser?.uid) : true;
-        return palTypeOk && onlyMineOk;
+
+        // check textFilter
+        let textFilterOk =  this.state.palfilters.textFilter.length === 0 ||
+            palEntry.cooked.includes(this.state.palfilters.textFilter);
+
+        return palTypeOk && onlyMineOk && textFilterOk;
+    };
+
+    //
+    handleTextFilter = (event: any) => {
+        let theTextFilter = this.normalizeString(event.target.value).trim();
+        let thePalindromes = this.state.dbPalindromes.palindromes.slice();
+            // unselect the entries hidden to avoid acting on hidden entries
+            thePalindromes.map((entry) => {
+                if (!entry.raw.includes(theTextFilter)) {
+                    entry.selected = false;
+                }
+                return entry;
+            });
+
+        let thePalType = this.state.palfilters.palFilterType;
+        let theOnlyMine = this.state.palfilters.onlyMine;
+        this.setState({
+            palfilters: {
+                palFilterType: thePalType,
+                onlyMine: theOnlyMine,
+                textFilter: theTextFilter
+            },
+            dbPalindromes: {palindromes: thePalindromes}
+        });
     };
 
     handleOnlyMineChecked = () => {
@@ -215,10 +246,12 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             });
         }
         let thePalType = this.state.palfilters.palFilterType;
+        let theTextFilter = this.state.palfilters.textFilter;
         this.setState({
             palfilters: {
                 palFilterType: thePalType,
-                onlyMine: isChecked
+                onlyMine: isChecked,
+                textFilter: theTextFilter
             },
             dbPalindromes: {palindromes: thePalindromes}
         });
@@ -282,11 +315,13 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             });
         }
         let onlyMine = this.state.palfilters.onlyMine;
+        let theTextFilter = this.state.palfilters.textFilter;
         this.setState({
             dbPalindromes: {palindromes: thePalindromes},
             palfilters: {
                 palFilterType: palFilterTyperEnum,
-                onlyMine: onlyMine
+                onlyMine: onlyMine,
+                textFilter: theTextFilter
             }
         });
     };
@@ -336,6 +371,11 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                         </button>
                         <div className={"right-just"}>
                             <span><strong>Filters:&nbsp;</strong></span>
+                            <input placeholder={"search text"}
+                                type="text"
+                                name="textFilter"
+                                onChange={this.handleTextFilter}
+                            />&nbsp;&nbsp;|&nbsp;&nbsp;
                             <input
                                 type="checkbox"
                                 name="onlyMine"
@@ -368,7 +408,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                         onChange={this.handleOptionChange}
                                         className=""
                                     />
-                                    Only Palindromes
+                                    Palindromes
                                 </label>
                             </div>
                             <div className="radio-button">
@@ -381,7 +421,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                         onChange={this.handleOptionChange}
                                         className=""
                                     />
-                                    Only Non-palindromes
+                                    Non-palindromes
                                 </label>
                             </div>
                         </div>

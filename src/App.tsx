@@ -168,14 +168,13 @@ export const App = () => {
                                         </tr>
                                         <tr>
                                             <td colSpan={2}>
-                                                <span className={"right-just"}>
-                                                    <a href="#" onClick={() => {
-                                                        let shown = !state.showPopup;
-                                                        setState({
-                                                            showPopup: shown
-                                                        });
-                                                    }}><span className={"even-smaller"}>Show Privacy Policy</span>
-                                                    </a>
+                                                <span className={""}>
+                                                     <button onClick={() => {
+                                                         let shown = !state.showPopup;
+                                                         setState({
+                                                             showPopup: shown
+                                                         });
+                                                     }}>Show Privacy Policy</button>
                                                     {
                                                         state.showPopup &&
                                                         <Popup
