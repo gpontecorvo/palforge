@@ -73,7 +73,7 @@ const addUserToDb = (user: User.User) => {
         createdAt: theJson.createdAt,
         isAdmin: false
     }, {merge: true}).then(function () {
-        console.log("Document successfully written to \"users\" collection");
+        console.log("Document for ", theJson.displayName, " successfully merged to \"users\" collection");
     }).catch(function (error) {
         console.error("Error writing document: ", error);
     });
@@ -83,7 +83,6 @@ firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
         addUserToDb(user);
     } else {
-
         console.log(
             "User is signed out "
         )
@@ -150,7 +149,6 @@ export const App = () => {
                                 </div>
                                 <div>
                                     <table className={"app-banner"}>
-
                                         <thead>
                                         </thead>
                                         <tbody>
@@ -161,25 +159,23 @@ export const App = () => {
                                         </tr>
                                         <tr>
                                             <td>
-                                                <span className={"smaller"}>version {require('../package.json').version}</span>
+                                                <span
+                                                    className={"smaller"}>version {require('../package.json').version}</span>
                                             </td>
                                             <td>
-                                                 <span className={"even-smaller"}>&copy;2020 Greg Pontecorvo. All rites observed.</span>
+                                                <span className={"even-smaller"}>&copy;2020 Greg Pontecorvo. All rites observed.</span>
                                             </td>
                                         </tr>
-                                        </tbody>
-                                        <tfoot></tfoot>
-                                    </table>
-                                    <span>
-                                                <span className={""}>
+                                        <tr>
+                                            <td colSpan={2}>
+                                                <span className={"right-just"}>
                                                     <a href="#" onClick={() => {
                                                         let shown = !state.showPopup;
                                                         setState({
                                                             showPopup: shown
                                                         });
-                                                    }}>Show Privacy Policy
+                                                    }}><span className={"even-smaller"}>Show Privacy Policy</span>
                                                     </a>
-
                                                     {
                                                         state.showPopup &&
                                                         <Popup
@@ -193,8 +189,12 @@ export const App = () => {
                                                             }}
                                                         />
                                                     }
-                                                </span>
-                                    </span>
+                                                 </span>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                        <tfoot></tfoot>
+                                    </table>
                                 </div>
                             </div>
                             <div className={"auth-content"}>
@@ -212,7 +212,26 @@ export const App = () => {
 
                                                         return (
                                                             <div>
-                                                                <div className={"left-just"}>Signed in as:&nbsp;</div>
+                                                                <div className={"left-just"}>
+                                                                    {/*<h5>Signed in as:</h5>*/}
+                                                                    <div>
+                                                                        <button className="pal-button"
+                                                                                onClick={async () => {
+                                                                                    // setState({isLoading: true});
+                                                                                    // var prevUserId = state.currentUserUid;
+                                                                                    // console.log("in signout onclick ", prevUserId);
+                                                                                    await firebase.auth().signOut();
+                                                                                    // removeAnonymousData(prevUserId);
+                                                                                    setState({
+                                                                                        // isLoading: false,
+                                                                                        currentUserUid: ""
+                                                                                    });
+                                                                                }}
+                                                                        >
+                                                                            Sign out
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
                                                                 <div className={"left-just"}>
                                                                     {
 
@@ -237,23 +256,6 @@ export const App = () => {
                                                                     }
                                                                 </div>
 
-                                                                <div className={"left-just"}>
-                                                                    <button className="pal-button"
-                                                                            onClick={async () => {
-                                                                                // setState({isLoading: true});
-                                                                                // var prevUserId = state.currentUserUid;
-                                                                                // console.log("in signout onclick ", prevUserId);
-                                                                                await firebase.auth().signOut();
-                                                                                // removeAnonymousData(prevUserId);
-                                                                                setState({
-                                                                                    // isLoading: false,
-                                                                                    currentUserUid: ""
-                                                                                });
-                                                                            }}
-                                                                    >
-                                                                        Sign out
-                                                                    </button>
-                                                                </div>
                                                                 <div className={"clear-float clearfix"}></div>
                                                                 <div className={"palForge"}>
                                                                     <Palforge/>
@@ -266,7 +268,7 @@ export const App = () => {
                                                     {() => {
                                                         return (
                                                             <div>
-                                                                <h5>You're not signed in </h5>
+                                                                {/*<h5>Sign in:</h5>*/}
                                                                 {/*         Anonymous (future)          */}
                                                                 {/*<button*/}
                                                                 {/*    onClick={async () => {*/}

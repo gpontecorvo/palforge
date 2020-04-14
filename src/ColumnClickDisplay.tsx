@@ -1,5 +1,5 @@
 import * as React from "react";
-import './index.css';
+import "./ColumnClickDisplay.css";
 
 export interface IColumnClickDisplayState {
     sortInfo: {
@@ -62,15 +62,16 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
     }
 
     displayTheArrows(sortInfo: any) {
+        // console.log("displayTheArrows ", sortInfo);
         let allHeaderElements = document.getElementsByClassName(this.props.markerClass);
 
         Array.from(allHeaderElements)
             .forEach((theElement) => {
                 var theClasses = theElement.classList.value.split(/\s+/);
-                // console.log("\n------------\ntheClasses ", theClasses, " sortInfo ", sortInfo )
+                // console.log("\n------------\ntheParent ", theElement.parentElement?.id,  "\ntheClasses ", theClasses, " sortInfo ", sortInfo )
                 if ((theElement.parentElement && theElement.parentElement.id === sortInfo.sortCol)) {
                     if (theClasses.findIndex((aClass) => aClass === this.ARROW_UP) !== -1) {
-                        let visIndex = theClasses.findIndex((aClass) => aClass === (sortInfo.sortDesc ? this.NOT_SEEN : this.SEEN));
+                        let visIndex = theClasses.findIndex((aClass) => aClass === (!sortInfo.sortDesc ? this.NOT_SEEN : this.SEEN));
                         if (visIndex !== -1) {
                             theClasses[visIndex] = (sortInfo.sortDesc ? this.NOT_SEEN : this.SEEN);
                             theElement.classList.value = theClasses.join(" ");
@@ -83,6 +84,7 @@ class ColumnClickDisplay extends React.Component<IColumnClickDisplayProps, IColu
                         }
                     }
                 } else {
+                    //console.log("in else ... theParent: ", theElement.parentElement);
                     let visIndex = theClasses.findIndex((aClass) => aClass === this.SEEN);
                     if (visIndex !== -1) {
                         theClasses[visIndex] = this.NOT_SEEN;

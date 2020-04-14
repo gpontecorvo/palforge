@@ -138,9 +138,10 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         var selected = this.state.dbPalindromes.palindromes.filter(pal => pal.selected);
         selected.map(pal => {
             this.deleteDocument(pal);
+            this.reloadFromDb();
+            this.forceUpdate();
             return pal;
         });
-        this.reloadFromDb();
     };
 
     deleteDocument = (pal: any) => {
