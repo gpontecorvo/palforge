@@ -157,7 +157,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     addToDb = (str: any) => {
         const userJSON: any = firebase.auth().currentUser?.toJSON();
         const reducedJson = JSON.stringify(Object.keys(userJSON).reduce((obj: any, key) => {
-                if (["uid", "displayName", "photoURL"].includes(key)) {
+                if (["uid", "displayName"].includes(key)) {
                     obj[key] = userJSON[key];
                 }
                 return obj;
@@ -198,7 +198,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         let onlyMineOk = this.state.palfilters.onlyMine ? (theUser === firebase.auth().currentUser?.uid) : true;
 
         // check textFilter
-        let textFilterOk =  this.state.palfilters.textFilter.length == 0 ||
+        let textFilterOk =  this.state.palfilters.textFilter.length === 0 ||
             palEntry.cooked.includes(this.state.palfilters.textFilter);
 
         return palTypeOk && onlyMineOk && textFilterOk;
