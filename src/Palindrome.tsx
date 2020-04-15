@@ -87,7 +87,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 var theRaw = `${doc.data().raw}`;
                 var theCooked = `${doc.data().cooked}`;
                 var theUser = `${doc.data().user}`;
-                var theArchived =  String(`${doc.data().archived}`) === "true";
+                var theArchived = String(`${doc.data().archived}`) === "true";
                 // if (theUser.startsWith("{")) {
                 //     theUser = JSON.parse(theUser).uid;
                 // }
@@ -100,7 +100,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                     "selected": false,
                     "createTime": theCreateTime,
                     "user": theUser,
-                    "archived":theArchived
+                    "archived": theArchived
                 });
 
             });
@@ -152,11 +152,47 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         });
     };
 
+    handleArchiveSelected = (event:any) => { //: React.MouseEvent<HTMLButtonElement, MouseEvent>
+        var thePalindromes = this.state.dbPalindromes.palindromes.slice();
+        const trueFalse = String(event.target.value) === "true";
+        thePalindromes.map(pal => {
+            if (pal.selected) {
+                pal.archived = trueFalse;
+                this.changeArchive(pal);
+            }
+            return pal;
+        });
+        let thePalType = this.state.palfilters.palFilterType;
+        let theOnlyMine = this.state.palfilters.onlyMine;
+        let theArchived = this.state.palfilters.includeArchived;
+        let theTextFilter = this.state.palfilters.textFilter;
+        this.setState({
+            palfilters: {
+                palFilterType: thePalType,
+                onlyMine: theOnlyMine,
+                textFilter: theTextFilter,
+                includeArchived: theArchived
+            },
+            dbPalindromes: {palindromes: thePalindromes}
+        });
+//        this.reloadFromDb();
+    };
+
     deleteDocument = (pal: any) => {
         db.collection("/palindromes").doc(pal.id).delete().then(function () {
             console.log("Palindrome successfully deleted " + JSON.stringify(pal));
         }).catch(function (error) {
             console.error("Error removing document: ", error);
+        });
+    };
+
+    changeArchive = (pal: any) => {
+        db.collection("/palindromes").doc(pal.id).update({
+            "archived": pal.archived
+        }).then(function () {
+            console.log("Palindrome successfully updated " + JSON.stringify(pal));
+        }).catch(function (error) {
+            console.error("Error updating document: ", error);
         });
     };
 
@@ -205,11 +241,11 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         let onlyMineOk = this.state.palfilters.onlyMine ? (theUser === firebase.auth().currentUser?.uid) : true;
 
         // check textFilter
-        let textFilterOk =  this.state.palfilters.textFilter.length === 0 ||
+        let textFilterOk = this.state.palfilters.textFilter.length === 0 ||
             palEntry.cooked.includes(this.state.palfilters.textFilter);
 
         // check archive filter
-        let archiveFilterOk = this.state.palfilters.includeArchived ?  true: !palEntry.archived;
+        let archiveFilterOk = this.state.palfilters.includeArchived ? true : !palEntry.archived;
 
         return palTypeOk && onlyMineOk && textFilterOk && archiveFilterOk;
     };
@@ -218,13 +254,13 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     handleTextFilter = (event: any) => {
         let theTextFilter = this.normalizeString(event.target.value).trim();
         let thePalindromes = this.state.dbPalindromes.palindromes.slice();
-            // unselect the entries hidden to avoid acting on hidden entries
-            thePalindromes.map((entry) => {
-                if (!entry.raw.includes(theTextFilter)) {
-                    entry.selected = false;
-                }
-                return entry;
-            });
+        // unselect the entries hidden to avoid acting on hidden entries
+        thePalindromes.map((entry) => {
+            if (!entry.raw.includes(theTextFilter)) {
+                entry.selected = false;
+            }
+            return entry;
+        });
 
         let thePalType = this.state.palfilters.palFilterType;
         let theOnlyMine = this.state.palfilters.onlyMine;
@@ -277,7 +313,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         if (nextState) {
             // deselect the hidden ones to avoid inadvertent action on them
             thePalindromes.map((entry) => {
-                if ( !entry.archived ) {
+                if (!entry.archived) {
                     entry.selected = false;
                 }
                 return entry;
@@ -390,108 +426,132 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 <div>
                     <div>
                         <label>Input as typed
-                            <div placeholder="Input As Typed" className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>
+                            <div placeholder="Input As Typed"
+                                 className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>
                                 {this.state.palindrome}
                             </div>
                         </label>
                     </div>
                     <div placeholder={"Turnaround"}>Reversed input: (Turnaround is {smoothedParts[1]})</div>
                     <div placeholder="Reversed Input"
-                        className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothedParts}</div>
+                         className={"indent section-border " + this.palindromeClass(this.state.palindrome)}>{smoothedParts}</div>
                 </div>}
 
                 <div>
-                    <div>
-                        <div>Saved palindromes:</div>
-                    </div>
                     <div className={"indent"}>
                         <div className={""}>
                             <table className={"app-banner"}>
+                                <thead>
                                 <tr>
-                                    <td>
-                                        <button className="pal-button"
-                                                onClick={this.deleteSelected}
-                                                disabled={this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
-                                        >
-                                            Delete Selected
-                                        </button>
+                                    <th colSpan={2}>
+                                        Selected Actions
+                                    </th>
 
-                                    </td>
-                                    <td>
-                                        <span><strong>Filters:&nbsp;</strong></span>
-                                    </td>
-                                    <td>
-                                        <input placeholder={"search text"}
-                                               size={40}
-                                               type="text"
-                                               name="textFilter"
-                                               onChange={this.handleTextFilter}
-                                        />
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="checkbox"
-                                            name="onlyMine"
-                                            checked={this.state.palfilters.onlyMine}
-                                            onChange={this.handleOnlyMineChecked}
-                                            value={"value"}
-                                            className={"checkbox"}
-                                        />Only mine
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="checkbox"
-                                            name="archived"
-                                            checked={this.state.palfilters.includeArchived}
-                                            onChange={this.handleArchiveChecked}
-                                            value={"value"}
-                                            className={"checkbox"}
-                                        />Archived
-                                    </td>
-                                    <td>
-                                        <div className="radio-button">
-                                            <label>
-                                                <input
-                                                    type="radio"
-                                                    name="palfilter"
-                                                    value={PalFilterType.ALL}
-                                                    checked={this.state.palfilters.palFilterType === PalFilterType.ALL}
-                                                    onChange={this.handleOptionChange}
-                                                    className=""
-                                                />
-                                                All
-                                            </label>
-                                        </div>
-                                        <div className="radio-button">
-                                            <label>
-                                                <input
-                                                    type="radio"
-                                                    name="palfilter"
-                                                    value={PalFilterType.ONLY_PALINDROMES}
-                                                    checked={this.state.palfilters.palFilterType === PalFilterType.ONLY_PALINDROMES}
-                                                    onChange={this.handleOptionChange}
-                                                    className=""
-                                                />
-                                                Palindromes
-                                            </label>
-                                        </div>
-                                        <div className="radio-button">
-                                            <label>
-                                                <input
-                                                    type="radio"
-                                                    name="palfilter"
-                                                    value={PalFilterType.NOT_PALINDROMES}
-                                                    checked={this.state.palfilters.palFilterType === PalFilterType.NOT_PALINDROMES}
-                                                    onChange={this.handleOptionChange}
-                                                    className=""
-                                                />
-                                                Non-palindromes
-                                            </label>
-                                        </div>
-                                    </td>
+                                    <th colSpan={2}>
+                                        Filters
+                                    </th>
                                 </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colSpan={2}>
+                                            <button className="pal-button"
+                                                    onClick={this.deleteSelected}
+                                                    disabled={this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
+                                            >Delete Selected
+                                            </button>
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                name="onlyMine"
+                                                checked={this.state.palfilters.onlyMine}
+                                                onChange={this.handleOnlyMineChecked}
+                                                value={"value"}
+                                                className={"checkbox"}
+                                            />Only mine
+                                        </td>
+                                        <td>
+                                            <div className="radio-button">
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="palfilter"
+                                                        value={PalFilterType.ALL}
+                                                        checked={this.state.palfilters.palFilterType === PalFilterType.ALL}
+                                                        onChange={this.handleOptionChange}
+                                                        className=""
+                                                    />All
+                                                </label>
+                                            </div>
+                                            <div className="radio-button">
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="palfilter"
+                                                        value={PalFilterType.ONLY_PALINDROMES}
+                                                        checked={this.state.palfilters.palFilterType === PalFilterType.ONLY_PALINDROMES}
+                                                        onChange={this.handleOptionChange}
+                                                        className=""
+                                                    />Palindromes
+                                                </label>
+                                            </div>
+                                            <div className="radio-button">
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="palfilter"
+                                                        value={PalFilterType.NOT_PALINDROMES}
+                                                        checked={this.state.palfilters.palFilterType === PalFilterType.NOT_PALINDROMES}
+                                                        onChange={this.handleOptionChange}
+                                                        className=""
+                                                    />Non-palindromes
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <button className="pal-button"
+                                                    value = {"true"}
+                                                    onClick={this.handleArchiveSelected}
+                                                    disabled={this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
+                                            >Archive Selected
+                                            </button>
+
+                                        </td>
+                                        <td>
+                                            <button className="pal-button"
+                                                    onClick={this.handleArchiveSelected}
+                                                    value = {"false"}
+                                                    disabled={this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
+                                            >Un-archive Selected
+                                            </button>
+
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                name="archived"
+                                                checked={this.state.palfilters.includeArchived}
+                                                onChange={this.handleArchiveChecked}
+                                                value={"value"}
+                                                className={"checkbox"}
+                                            />Archived
+                                        </td>
+                                        <td>
+                                            <input placeholder={"search text"}
+                                                   size={46}
+                                                   type="text"
+                                                   name="textFilter"
+                                                   onChange={this.handleTextFilter}
+                                            />
+                                        </td>
+                                    </tr>
+                                </tbody>
                             </table>
-                         </div>
+                        </div>
                     </div>
                     <div className="indent">
                         <table className={"list section-border palindrome-list"}>
@@ -535,29 +595,29 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                 .filter(pal => this.evaluatePalFilters(pal))
                                 .slice().sort((a, b) => this.comparePals(a, b))
                                 .map((item, key) =>
-                                        <tr key={key}>
-                                            <td>
-                                                {this.isCurrentUser(item.user)
-                                                && <input
-                                                    type="checkbox"
-                                                    name="listitems"
-                                                    checked={item.selected}
-                                                    onChange={this.handleSelected}
-                                                    value={item.id}
-                                                    className={"checkbox"}
-                                                />}
-                                                {item.archived && <span className={"even-smaller"}>archived</span>}
-                                            </td>
-                                            <td className={"list-item no-margin " + this.palindromeClass(item.raw)}>
-                                                {item.raw}
-                                            </td>
-                                            <td>
-                                                {item.createTime.toLocaleString()}
-                                            </td>
-                                            <td>
-                                                {this.getUserName(item.user)}
-                                            </td>
-                                        </tr>
+                                    <tr key={key}>
+                                        <td>
+                                            {this.isCurrentUser(item.user)
+                                            && <input
+                                                type="checkbox"
+                                                name="listitems"
+                                                checked={item.selected}
+                                                onChange={this.handleSelected}
+                                                value={item.id}
+                                                className={"checkbox"}
+                                            />}
+                                            {item.archived && <span className={"even-smaller"}><br/>archived</span>}
+                                        </td>
+                                        <td className={"list-item no-margin " + this.palindromeClass(item.raw)}>
+                                            {item.raw}
+                                        </td>
+                                        <td>
+                                            {item.createTime.toLocaleString()}
+                                        </td>
+                                        <td>
+                                            {this.getUserName(item.user)}
+                                        </td>
+                                    </tr>
                                 )}
                             </tbody>
                         </table>
