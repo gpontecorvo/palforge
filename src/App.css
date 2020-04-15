@@ -47,8 +47,9 @@ table.app-banner {
     margin-right: 300px;
 }
 
-table.app-banner, table.app-banner tr td {
+table.app-banner, table.app-banner tr td,  table.app-banner tr th {
     border: none;
+    vertical-align: top;
 }
 
 .app-title {

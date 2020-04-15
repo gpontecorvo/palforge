@@ -7,6 +7,8 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "@types/react-table": "^7.0.15",
+    "@types/styled-components": "^5.1.0",
     "firebase": "^7.14.0",
     "firebase-admin": "^8.10.0",
     "firebase-functions": "^3.6.0",
@@ -16,7 +18,8 @@
     "react": "^0.14.0 || ^15.0.0-0 || ^16.0.0-0",
     "react-dom": "^16.13.1",
     "react-powerplug": "^1.0.0",
-    "react-scripts": "3.4.1"
+    "react-scripts": "3.4.1",
+    "react-table": "^7.0.4"
   },
   "scripts": {
     "dev": "parcel src/index.html",
