@@ -49,6 +49,7 @@ table.app-banner {
 
 table.app-banner, table.app-banner tr td {
     border: none;
+    vertical-align: top;
 }
 
 .app-title {
