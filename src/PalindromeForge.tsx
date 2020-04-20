@@ -1,13 +1,14 @@
 import * as React from "react";
 import './index.css';
 import firebase from "./firebase";
-import {firestore} from "firebase";
 import "firebase/auth";
 
 import TextInput from "./TextInput";
 import ColumnClickDisplay, {IColumnClickDisplayState} from "./ColumnClickDisplay";
 import Popup from "./Popup";
+import {firestore} from "firebase";
 
+let WRITE_SUCCESS_AS_ERROR = false;
 
 const db = firebase.firestore();
 
@@ -22,12 +23,16 @@ interface IDbPalindrome {
     cooked: string;
     id: string;
     selected: boolean;
-    createTime: number;
+    createTime: Date;
     user: any;
     archived: boolean;
 }
 
-interface IPalindromeState {
+interface IUnsubscribe {
+    (): void
+}
+
+interface IPalindromeForgeState {
     palindrome: string;
     dbPalindromes: {
         palindromes: IDbPalindrome[];
@@ -40,11 +45,15 @@ interface IPalindromeState {
     }
     allNone: boolean;
     columnState: IColumnClickDisplayState;
-    errors: string[];
-    errorShown: boolean;
+    logEntries: string[];
+    logShown: boolean;
+    adminMode: boolean;
+    writeSuccessToLog: boolean;
+    unsubscribe: IUnsubscribe;
 }
 
-interface IPalindromeProps {
+interface IPalindromeForgeProps {
+    adminMode: boolean;
 }
 
 /**
@@ -56,7 +65,7 @@ interface IPalindromeProps {
  * clear storage
  *
  * */
-class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
+class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindromeForgeState> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -75,52 +84,109 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                     sortDesc: true
                 }
             },
-            errors: [],
-            errorShown: false
+            logEntries: [],
+            logShown: false,
+            writeSuccessToLog: false,
+            adminMode: this.props.adminMode || false,
+            unsubscribe: () => {
+            }
         }
     }
+    ;
 
-    componentDidMount() {
-        this.reloadFromDb();
+    startListening(): IUnsubscribe {
+        let theUnsubscribe = this.reloadFromDb();
+        this.setState({
+            unsubscribe: theUnsubscribe
+        })
+        console.log("subscribed....");
+        return theUnsubscribe;
     }
 
-    reloadFromDb() {
-        var thePalindromes = {"palindromes": Array()};
+    stopListening() {
+
+        this.state.unsubscribe();
+        console.log("unscubscrbed.....")
+    }
+
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+        console.log("in componentDidCatch ", error, errorInfo);
+    }
+
+    componentDidMount(): void {
+        this.startListening();
+    }
+
+    componentWillUnmount(): void {
+        this.stopListening();
+    }
+
+
+    reloadFromDb(): IUnsubscribe {
+        console.log("in reload()");
         let outerThis = this;
-        db.collection("/palindromes").get().then((querySnapshot) => {
-//                console.log("querySnapShot " + JSON.stringify(querySnapshot));
-            querySnapshot.forEach((doc) => {
-                var theRaw = `${doc.data().raw}`;
-                var theCooked = `${doc.data().cooked}`;
-                var theUser = `${doc.data().user}`;
-                var theArchived = String(`${doc.data().archived}`) === "true";
-                // if (theUser.startsWith("{")) {
-                //     theUser = JSON.parse(theUser).uid;
-                // }
-                var theId = `${doc.id}`;
-                var theCreateTime = new Date(1000 * Number(`${doc.data().createTime.seconds}`));
-                thePalindromes.palindromes.push({
-                    "raw": theRaw,
-                    "cooked": this.normalizeString(theCooked),
-                    "id": theId,
-                    "selected": false,
-                    "createTime": theCreateTime,
-                    "user": theUser,
-                    "archived": theArchived
+        let theUnsubscribe = db.collection("/palindromes")
+            .onSnapshot(function (snapshot) {
+                var thePalindromes = outerThis.state.dbPalindromes;
+                snapshot.docChanges().forEach(function (change) {
+                    let now = Date.now();
+                    if (change.type === "added") {
+                        let message = now.toLocaleString() + " New Palindrome: " + change.doc.data();
+                        console.log(message);
+                        // outerThis.addError("Success: " + message);
+                    }
+                    if (change.type === "modified") {
+                        let message = now.toLocaleString() + "Modified Palindrome: " + change.doc.data();
+                        console.log(message);
+                        // outerThis.addError("Success: " + message);
+                    }
+                    if (change.type === "removed") {
+                        let message = now.toLocaleString() + "Removed Palindrome: " + change.doc.data();
+                        console.log(message);
+                        // outerThis.addError("Success: " + message);
+                    }
+                    console.log("In listener function, change.type =  ", change.type);
+                    if (change.type === "added") {
+                        var theRaw = `${change.doc.data().raw}`;
+                        var theCooked = `${change.doc.data().cooked}`;
+                        var theUser = `${change.doc.data().user}`;
+                        var theArchived = String(`${change.doc.data().archived}`) === "true";
+                        // if (theUser.startsWith("{")) {
+                        //     theUser = JSON.parse(theUser).uid;
+                        // }
+                        var theId = `${change.doc.id}`;
+                        // var theCreateTime = new Date(1000 * Number(`${doc.data().createTime.seconds}`));
+                        var theCreateTime = new Date(1000 * Number(`${change.doc.data().createTime.seconds}`));
+                        //console.log("---Reloading another)");
+                        thePalindromes.palindromes.push({
+                            "raw": theRaw,
+                            "cooked": outerThis.normalizeString(theCooked),
+                            "id": theId,
+                            "selected": false,
+                            "createTime": theCreateTime,
+                            "user": theUser,
+                            "archived": theArchived
+                        });
+                    }
+                    if (change.type === "removed") {
+                        thePalindromes.palindromes = thePalindromes.palindromes.filter(function(value, ){ return value.id !== `${change.doc.id}`;});
+                    }
+
                 });
+                // console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
+                //test errors:
+                outerThis.setState({
+                    dbPalindromes: thePalindromes
+                });
+                if (WRITE_SUCCESS_AS_ERROR) {
+                    outerThis.addError("Success: fetched all the documents: " + JSON.stringify(thePalindromes.palindromes));
+                }
+            }, function (error) {
+                outerThis.addError("Error getting documents: " + error);
 
             });
-            // console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
-            //test errors:
-            this.setState({
-                dbPalindromes: thePalindromes
-            });
-           // outerThis.addError("FAKE : a big fake error, this is really success");
-        }).catch(function (error) {
-            error = "Error getting documents: " + error;
-            outerThis.addError(error);
-         });
-        return thePalindromes;
+
+        return theUnsubscribe;
     }
 
     formatError = (error: any) => {
@@ -128,7 +194,6 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             "Google Firebase quotas being exceed on the free account" +
             " in which this app is running: " + error);
     }
-    //console.log("byId? " + JSON.stringify(thePalindromes.palindromes.filter(obj => obj.id === "0OMgK4Bd5cFLa8pw5O4m")));
 
     onChange = (value: any) => {
         this.setState(() => ({
@@ -148,13 +213,23 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         return this.isPalindrome(str);
     };
 
-    saveText = (str: any) => {
+    saveText = async (str: any) => {
         if (!str) {
             return "";
         }
 
-        this.addToDb(str);
-        this.reloadFromDb();
+        let newPal: any = {};
+        console.log("in saveText before addToDb");
+        await this.addToDb(str).then(function (result) {
+            newPal = result;
+            console.log("in save text added", newPal);
+        });
+        //      this.reloadFromDb();
+        // let thePalindromes = this.state.dbPalindromes.palindromes;
+        // thePalindromes.push(newPal);
+        // this.setState({
+        //     dbPalindromes: {palindromes: thePalindromes}
+        // });
         return str;
     };
 
@@ -162,10 +237,16 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         var selected = this.state.dbPalindromes.palindromes.filter(pal => pal.selected);
         selected.map(pal => {
             this.deleteDocument(pal);
-            this.reloadFromDb();
+            // this.reloadFromDb();
             this.forceUpdate();
             return pal;
         });
+        // var notSelected = this.state.dbPalindromes.palindromes.filter(pal => !pal.selected);
+        //
+        // this.setState({
+        //     dbPalindromes: {palindromes: notSelected}
+        // });
+
     };
 
     handleArchiveSelected = (event: any) => { //: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -178,27 +259,18 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             }
             return pal;
         });
-        let thePalType = this.state.palfilters.palFilterType;
-        let theOnlyMine = this.state.palfilters.onlyMine;
-        let theArchived = this.state.palfilters.includeArchived;
-        let theTextFilter = this.state.palfilters.textFilter;
         this.setState({
-            palfilters: {
-                palFilterType: thePalType,
-                onlyMine: theOnlyMine,
-                textFilter: theTextFilter,
-                includeArchived: theArchived
-            },
             dbPalindromes: {palindromes: thePalindromes}
         });
-//        this.reloadFromDb();
     };
 
     deleteDocument = (pal: any) => {
         let outerThis = this;
         db.collection("/palindromes").doc(pal.id).delete().then(function () {
             console.log("Palindrome successfully deleted " + JSON.stringify(pal));
-           // outerThis.addError("FAKE : Palindrome successfully deleted " + JSON.stringify(pal));
+            if (WRITE_SUCCESS_AS_ERROR) {
+                outerThis.addError("Success : Palindrome successfully deleted " + JSON.stringify(pal));
+            }
         }).catch(function (error) {
             error = "Error deleting document: " + error;
             outerThis.addError(error);
@@ -211,14 +283,16 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             "archived": pal.archived
         }).then(function () {
             console.log("Palindrome successfully updated " + JSON.stringify(pal));
-           // outerThis.addError("FAKE : Palindrome successfully updated " + JSON.stringify(pal));
+            if (WRITE_SUCCESS_AS_ERROR) {
+                outerThis.addError("Success : Palindrome successfully updated " + JSON.stringify(pal));
+            }
         }).catch(function (error) {
             error = "Error updating document: " + error;
             outerThis.addError(error);
         });
     };
 
-    addToDb = (str: any) => {
+    addToDb = async (str: any) => {
         const userJSON: any = firebase.auth().currentUser?.toJSON();
         const reducedJson = JSON.stringify(Object.keys(userJSON).reduce((obj: any, key) => {
                 if (["uid", "displayName"].includes(key)) {
@@ -229,30 +303,48 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         ));
         // console.log("addingtoDB:\n",reducedJson);
         let outerThis = this;
-        db.collection("palindromes").add({
+
+        let timeStamp = firestore.Timestamp.fromDate(new Date());
+
+        let newPal: any = {};
+        await db.collection("palindromes").add({
             raw: str,
             cooked: this.stripWhiteSpace(this.normalizeString(str)), // save space in DB, remove spaces
-            createTime: firestore.Timestamp.fromDate(new Date()),
+            createTime: timeStamp,
             user: reducedJson,
             archived: false
         })
             .then(function (docRef) {
                 console.log("Document written with ID: ", docRef.id);
-                // outerThis.addError("FAKE : Document written with ID: " + docRef.id);
+                newPal = {
+                    raw: str,
+                    cooked: outerThis.stripWhiteSpace(outerThis.normalizeString(str)),
+                    id: docRef.id,
+                    selected: false,
+                    createTime: new Date(timeStamp.seconds * 1000),
+                    user: reducedJson,
+                    archived: false
+                };
+
+                if (WRITE_SUCCESS_AS_ERROR) {
+                    outerThis.addError("Success : Document written with ID: " + docRef.id);
+                }
             })
             .catch(function (error) {
                 error = "Error adding document: " + error;
                 outerThis.addError(error);
             });
+        return newPal;
     };
 
-    addError = (error: any ) => {
+    addError = (error: any) => {
         console.error(error);
-        let theErrors = this.state.errors.slice();
+        let theErrors = this.state.logEntries.slice();
+        theErrors.push("__ Error Time: " + new Date().toLocaleString() + "_____");
         theErrors.push(this.formatError(error));
 
         this.setState({
-            errors: theErrors,
+            logEntries: theErrors,
         });
     }
 
@@ -295,16 +387,11 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
             return entry;
         });
 
-        let thePalType = this.state.palfilters.palFilterType;
-        let theOnlyMine = this.state.palfilters.onlyMine;
-        let theArchived = this.state.palfilters.includeArchived;
+        let thePalfilters = this.state.palfilters;
+        thePalfilters.textFilter = theTextFilter;
+
         this.setState({
-            palfilters: {
-                palFilterType: thePalType,
-                onlyMine: theOnlyMine,
-                textFilter: theTextFilter,
-                includeArchived: theArchived
-            },
+            palfilters: thePalfilters,
             dbPalindromes: {palindromes: thePalindromes}
         });
     };
@@ -326,16 +413,10 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 return entry;
             });
         }
-        let thePalType = this.state.palfilters.palFilterType;
-        let theTextFilter = this.state.palfilters.textFilter;
-        let theArchived = this.state.palfilters.includeArchived;
+        let thePalfilters = this.state.palfilters;
+        thePalfilters.onlyMine = isChecked;
         this.setState({
-            palfilters: {
-                palFilterType: thePalType,
-                onlyMine: isChecked,
-                textFilter: theTextFilter,
-                includeArchived: theArchived
-            },
+            palfilters: thePalfilters,
             dbPalindromes: {palindromes: thePalindromes}
         });
     };
@@ -352,16 +433,11 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                 return entry;
             });
         }
-        let thePalType = this.state.palfilters.palFilterType;
-        let theTextFilter = this.state.palfilters.textFilter;
-        let theOnlyMine = this.state.palfilters.onlyMine;
+
+        let thePalfilters = this.state.palfilters;
+        thePalfilters.includeArchived = nextState;
         this.setState({
-            palfilters: {
-                palFilterType: thePalType,
-                onlyMine: theOnlyMine,
-                textFilter: theTextFilter,
-                includeArchived: nextState
-            },
+            palfilters: thePalfilters,
             dbPalindromes: {palindromes: thePalindromes}
         });
     };
@@ -412,36 +488,32 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     };
 
     handleOptionChange = (event: { target: { value: string; }; }) => {
-        const palFilterTyperEnum = event.target.value as PalFilterType;
+        const palFilterTypeEnum = event.target.value as PalFilterType;
         let thePalindromes = this.state.dbPalindromes.palindromes.slice();
-        if (palFilterTyperEnum !== PalFilterType.ALL) {
+        if (palFilterTypeEnum !== PalFilterType.ALL) {
             // deselect the hidden ones to avoid inadvertent action on them
             thePalindromes.map((entry) => {
                 entry.selected = this.isPalindrome(entry.cooked) ?
-                    entry.selected && palFilterTyperEnum === PalFilterType.ONLY_PALINDROMES :
-                    entry.selected && palFilterTyperEnum === PalFilterType.NOT_PALINDROMES;
+                    entry.selected && palFilterTypeEnum === PalFilterType.ONLY_PALINDROMES :
+                    entry.selected && palFilterTypeEnum === PalFilterType.NOT_PALINDROMES;
                 return entry;
             });
         }
-        let onlyMine = this.state.palfilters.onlyMine;
-        let theTextFilter = this.state.palfilters.textFilter;
-        let theArchived = this.state.palfilters.includeArchived;
+
+        let thePalfilters = this.state.palfilters;
+        thePalfilters.palFilterType = palFilterTypeEnum;
         this.setState({
-            dbPalindromes: {palindromes: thePalindromes},
-            palfilters: {
-                palFilterType: palFilterTyperEnum,
-                onlyMine: onlyMine,
-                textFilter: theTextFilter,
-                includeArchived: theArchived
-            }
+            palfilters: thePalfilters,
+            dbPalindromes: {palindromes: thePalindromes}
         });
+
     };
 
-    createHtml = (errors: string[]) => {
+    createErrorHtml = (errors: string[]) => {
         return (
             <div className={"privacypolicy section-border padded "}>
                 {errors.map
-                ((error, key ) => {
+                ((error, key) => {
                     return (
                         <p key={key}>
                             {error}
@@ -461,37 +533,37 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
         return (
             <div>
                 <div>
-                    {this.state.errors.length > 0 &&
+                    {this.state.logEntries.length > 0 &&
                     <span className={""}>
-                <button onClick={() => {
-                    let errorShown = !this.state.errorShown;
-                    this.setState({
-                        errorShown: errorShown
-                    });
-                }}>Show Errors</button>
+                        <button onClick={() => {
+                            let errorShown = !this.state.logShown;
+                            this.setState({
+                                logShown: errorShown
+                            });
+                        }}>Show Errors</button>
                         {
-                            this.state.errorShown &&
+                            this.state.logShown &&
                             <Popup
-                                html={this.createHtml(this.state.errors)}
-                                buttonText={"Hide Error"}
+                                html={this.createErrorHtml(this.state.logEntries)}
+                                buttonText={"Hide Errors"}
                                 closePopup={() => {
-                                    let errorShown = !this.state.errorShown;
+                                    let errorShown = !this.state.logShown;
                                     this.setState({
-                                        errorShown: errorShown
+                                        logShown: errorShown
                                     });
                                 }}
                             />
                         }
                         <button onClick={() => {
                             this.setState({
-                                errors: []
+                                logEntries: []
                             });
                         }}>Clear Errors</button>
                 </span>
                     }
 
                 </div>
-                <div>Enter text to create a palindrome:</div>
+                {/*<div>Enter text to create a palindrome:</div>*/}
                 <div
                     className={"input-area section-border"}>
                     {/*bind methods for the child */}
@@ -533,14 +605,14 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                 </thead>
                                 <tbody>
                                 <tr>
-                                    <td colSpan={2}>
+                                    <td>
                                         <button className="pal-button"
                                                 onClick={this.deleteSelected}
                                                 disabled={this.state.dbPalindromes.palindromes.filter(pal => pal.selected).length === 0}
                                         >Delete Selected
                                         </button>
                                     </td>
-
+                                    <td></td>
                                     <td>
                                         <input
                                             type="checkbox"
@@ -637,6 +709,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                             <thead>
                             <tr>
                                 <th>
+                                    {this.props.adminMode && <span className={"even-smaller"}>ADMIN<br/>Override</span>}
                                     <input
                                         type="checkbox"
                                         name="allNone"
@@ -645,6 +718,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                         value={"value"}
                                         className={"checkbox"}
                                     />
+                                    {/*{this.props.adminMode &&  <span className={"even-smaller"}><br/>Override</span>}*/}
                                 </th>
 
                                 <ColumnClickDisplay
@@ -675,7 +749,9 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                 .map((item, key) =>
                                     <tr key={key}>
                                         <td>
-                                            {this.isCurrentUser(item.user)
+                                            {(this.props.adminMode && !this.isCurrentUser(item.user)) &&
+                                            <span className={"even-smaller"}>ADMIN<br/></span>}
+                                            {(this.isCurrentUser(item.user) || this.props.adminMode)
                                             && <input
                                                 type="checkbox"
                                                 name="listitems"
@@ -685,6 +761,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
                                                 className={"checkbox"}
                                             />}
                                             {item.archived && <span className={"even-smaller"}><br/>archived</span>}
+
                                         </td>
                                         <td className={"list-item no-margin " + this.palindromeClass(item.raw)}>
                                             {item.raw}
@@ -718,7 +795,7 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
     comparePals = (a: any, b: any) => {
         switch (this.state.columnState.sortInfo.sortCol) {
             case "createdColumn":
-                return this.state.columnState.sortInfo.sortDesc ? b.createTime - a.createTime : a.createTime - b.createTime;
+                return this.state.columnState.sortInfo.sortDesc ? b.createTime - a.createTime: a.createTime - b.createTime;
             case "entryColumn":
                 return this.state.columnState.sortInfo.sortDesc ? b.raw.localeCompare(a.raw) : a.raw.localeCompare(b.raw);
             case "uidColumn":
@@ -809,4 +886,4 @@ class Palindrome extends React.Component<IPalindromeProps, IPalindromeState> {
 }
 
 // ========================================
-export default Palindrome;
+export default PalindromeForge;

@@ -47,10 +47,27 @@ table.app-banner {
     margin-right: 300px;
 }
 
+table.app-banner {
+    border: thin black solid;
+}
+
 table.app-banner, table.app-banner tr td,  table.app-banner tr th {
     border: none;
-    vertical-align: top;
+    /*vertical-align: top;*/
 }
+
+table.app-banner tr td:nth-child(2) {
+    border-right: thin black solid;
+}
+
+table.app-banner tr th:nth-child(1)  {
+    /*border-left: thin black solid;*/
+    border-right: thin black solid;
+}
+
+/*table.app-banner tr th:nth-child(odd) {*/
+/*    border-right: thin black solid;*/
+/*}*/
 
 .app-title {
     font-size: x-large;

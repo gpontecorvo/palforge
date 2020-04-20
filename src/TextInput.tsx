@@ -11,7 +11,7 @@ import './index.css';
  *
  * */
 interface ITextInputState {
-    text?: string;
+    text: string;
     isPalindrome?: boolean;
 }
 
@@ -54,7 +54,8 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
     };
 
     saveText = () => {
-        const saved = this.props.saveText(this.state.text);
+        const saved = this.state.text;
+        this.props.saveText(saved);
         this.setState(() => ({
             text: saved,
         }));
@@ -65,7 +66,7 @@ class TextInput extends React.Component<ITextInputProps, ITextInputState> {
 
             <div>
                 <div>
-                    <textarea placeholder={"Enter text"} className="palindrome-input" onChange={this.onChange.bind(this)}
+                    <textarea placeholder={"Enter text to create palindromes"} className="palindrome-input" onChange={this.onChange.bind(this)}
                               value={this.state.text}/>
                 </div>
                 {
