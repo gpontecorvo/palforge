@@ -185,7 +185,6 @@ export const App = () => {
                         ({state, setState}) => (
                             <React.Fragment>
                                 <div>
-                                    <div>{` state: ${JSON.stringify(state.currentAppUser)}`}</div>
                                     <div className={"left-just"}>
                                         <img className={"App-logo"} alt={"logo"} height={"50px"}
                                              src={require('./resources/ourobouros.png')}/>
@@ -345,7 +344,9 @@ export const App = () => {
                                                                     <div className={"clear-float clearfix"}></div>
                                                                     <div className={"palForge"}>
                                                                         <PalindromeForge
-                                                                            adminMode={state.adminMode && state.currentAppUser.isAdmin}/>
+                                                                            adminMode={state.adminMode && state.currentAppUser.isAdmin}
+                                                                            writeSuccessToLog={state.adminMode && state.currentAppUser.isAdmin && state.writeSuccessToLog}
+                                                                        />
                                                                     </div>
 
                                                                 </div>)
