@@ -14,19 +14,11 @@ import {State} from "react-powerplug";
 import {privacypolicy} from "./privacypolicy";
 import Popup from "./Popup";
 import PalindromeForge from "./PalindromeForge";
-import User from "firebase";
 
 const APP_TITLE = "The Palindrome Forge";
-const THE_ADMINS_EMAIL = "gpontecorvo@gmail.com";
 
-const NO_USER = {
-    "isAdmin": false,
-    "isAnonymous": true,
-    "createdAt": 0,
-    "displayName": "theDisplayName"
-}
+const displayUserInfo =  (profile: firebase.UserInfo | null, isAnonymous: boolean) => {
 
-const displayUserInfo = (profile: firebase.UserInfo | null, isAnonymous: boolean) => {
     return (
         <div>
             <img className={"profileImg"} alt={"Profile"}
@@ -53,84 +45,6 @@ const displayUserInfo = (profile: firebase.UserInfo | null, isAnonymous: boolean
     );
 };
 
-const userColumns = ["uid", "displayName", "isAnonymous", "email"];
-
-const addUserToDb = (user: User.User) => {
-    const userJSON: any = user.toJSON();
-    const theJson = Object.keys(userJSON).reduce((obj: any, key) => {
-        if (userColumns.includes(key)) {
-            obj[key] = userJSON[key];
-        }
-        return obj;
-    }, {});
-
-    let theIsAdmin = theJson.email === THE_ADMINS_EMAIL;
-    console.log("addingUsertoDB:\n", JSON.stringify(theJson), " theIsAdmin ", theIsAdmin);
-
-    let db = firebase.firestore();
-    db.collection("users").doc(theJson.uid).set({
-        displayName: theJson.displayName,
-        isAnonymous: theJson.isAnonymous,
-        email: theJson.email,
-        isAdmin: theIsAdmin
-    }, {merge: true}).then(function () {
-        console.log("Document for ", theJson.displayName, " successfully merged to \"users\" collection");
-
-    }).catch(function (error) {
-        console.error("Error writing document: ", error);
-    });
-};
-
-const getAppUser = async (uid: string): Promise<any> => {
-
-    let db = firebase.firestore();
-    var docRef = db.collection("users").doc(uid);
-    var result: any;
-    await docRef.get().then(function (doc) {
-        if (doc.exists) {
-
-            var theIsAdmin = String(`${doc.data()!.isAdmin}`) === "true";
-            var theCreatedAt = new Date(Number(`${doc.data()!.createdAt}`));
-            var theDisplayName = `${doc.data()!.displayName}`;
-            var theIsAnonymous = String(`${doc.data()!.isAnonymous}`) === "true";
-            var theDoc = {
-                "isAdmin": theIsAdmin,
-                "isAnonymous": theIsAnonymous,
-                "createdAt": theCreatedAt,
-                "displayName": theDisplayName
-            }
-            // console.log("in getAppUser theDoc: ", theDoc);
-            result = theDoc;
-        } else {
-            // doc.data() will be undefined in this case
-            console.log("No such document for uid \"", uid, "\"");
-        }
-    }).catch(function (error) {
-        console.log("Error getting document:", error);
-    }).finally(function () {
-
-    });
-    return result;
-};
-
-
-/*
-function () {
-        console.log("Document for ", theJson.displayName, " successfully merged to \"users\" collection");
-
-    }
- */
-
-
-firebase.auth().onAuthStateChanged(function (user) {
-    if (user) {
-        addUserToDb(user);
-    } else {
-        console.log(
-            "User is signed out "
-        )
-    }
-});
 
 // not ready - may need this for anonymous login later
 // const removeAnonymousData = (currentUserUid: string) => {
@@ -174,7 +88,8 @@ export const App = () => {
             <div>
                 <State initial={
                     {
-                        currentAppUser: NO_USER,
+                        currentAppUser: firebase.auth().currentUser,
+                        currentUserIsAdmin: false,
                         privacypolicyshown: false,
                         showPrivacyPopup: false,
                         adminMode: false,
@@ -245,18 +160,17 @@ export const App = () => {
                                             return (
                                                 <div>
                                                     <IfFirebaseAuthed>
-                                                        {() => {
+                                                        { () => {
                                                             var isAnonymous = typeof firebase.auth().currentUser?.isAnonymous == "undefined" ?
                                                                 false : firebase.auth().currentUser!.isAnonymous
-                                                            if (state.currentAppUser === NO_USER) {
-                                                                let currUser: any = {};
-                                                                getAppUser(firebase.auth().currentUser!.uid).then(function (result) {
-                                                                    currUser = result;
+                                                            if (!state.currentAppUser) {
+                                                                let currUser = firebase.auth().currentUser;
+                                                               // getAppUser(firebase.auth().currentUser!.uid).then(function (result) {
                                                                     setState({
                                                                         // isLoading: false,
-                                                                        currentAppUser: currUser ? currUser : NO_USER
+                                                                        currentAppUser: currUser
                                                                     });
-                                                                });
+                                                                //});
                                                             }
                                                             //console.log("authed \n", JSON.stringify(firebase.auth().currentUser)); // ? false : firebase.auth().currentUser!.isAnonymous;
                                                             return (
@@ -272,7 +186,7 @@ export const App = () => {
                                                                                         // removeAnonymousData(prevUserId);
                                                                                         setState({
                                                                                             // isLoading: false,
-                                                                                            currentAppUser: NO_USER
+                                                                                            currentAppUser: firebase.auth().currentUser
                                                                                         });
                                                                                     }}
                                                                             >
@@ -281,10 +195,13 @@ export const App = () => {
 
                                                                         </div>
                                                                     </div>
+                                                                    <div>{
+
+                                                                    }</div>
                                                                     <div className={"left-just"}>
                                                                         {
 
-                                                                            displayUserInfo(firebase.auth().currentUser?.providerData ?
+                                                                             displayUserInfo(firebase.auth().currentUser?.providerData ?
                                                                                 firebase.auth().currentUser!.providerData[0] :
                                                                                 null, isAnonymous)
                                                                             // may need this is linking anonymous to another user
@@ -303,8 +220,11 @@ export const App = () => {
                                                                             //     }
                                                                             // </ol>
                                                                         }
+
                                                                     </div>
-                                                                    {state.currentAppUser && state.currentAppUser.isAdmin &&
+                                                                    {state.currentAppUser !== undefined && state.currentAppUser &&
+                                                                    state.currentUserIsAdmin &&
+
 
                                                                     <div className={"left-just"}>
                                                                         Admin Mode: {state.adminMode ? "ON " : "OFF"}
@@ -344,8 +264,8 @@ export const App = () => {
                                                                     <div className={"clear-float clearfix"}></div>
                                                                     <div className={"palForge"}>
                                                                         <PalindromeForge
-                                                                            adminMode={state.adminMode && state.currentAppUser.isAdmin}
-                                                                            writeSuccessToLog={state.adminMode && state.currentAppUser.isAdmin && state.writeSuccessToLog}
+                                                                            adminMode={state.adminMode && state.currentUserIsAdmin}
+                                                                            writeSuccessToLog={state.adminMode && state.currentUserIsAdmin && state.writeSuccessToLog}
                                                                         />
                                                                     </div>
 
@@ -384,17 +304,11 @@ export const App = () => {
                                                                                         // The signed-in user info.
                                                                                         var user = result.user;
                                                                                         //console.log(" user ", user?.uid );
-                                                                                        let currUser: any = {};
-                                                                                        await getAppUser(user!.uid).then(function (result) {
-                                                                                            currUser = result;
-                                                                                            console.log("in login click curruser then ", currUser);
-                                                                                        });
-                                                                                        console.log("in login click curruser after then ", currUser);
 
 
                                                                                         setState({
                                                                                             // isLoading: false,
-                                                                                            currentAppUser: currUser ? currUser : NO_USER
+                                                                                            currentAppUser: user
                                                                                         });
                                                                                     }).catch(function (error) {
                                                                                         // Handle Errors here.
@@ -412,6 +326,48 @@ export const App = () => {
                                                                                             credential, "\n",
                                                                                             "==== =========== =====\n")
                                                                                         // ...
+                                                                                    });
+
+                                                                                    let callback: { (snapshot: any): void; (a: firebase.database.DataSnapshot, b?: string | null | undefined): any; } | null = null;
+                                                                                    let metadataRef: firebase.database.Reference | null = null;
+                                                                                    firebase.auth().onAuthStateChanged(async user => {
+                                                                                        // Remove previous listener.
+                                                                                        if (callback) {
+                                                                                            metadataRef?.off('value', callback);
+                                                                                        }
+                                                                                        // On user login add new listener.
+                                                                                        if (user) {
+                                                                                            // Check if refresh is required.
+                                                                                            metadataRef = firebase.database().ref('metadata/' + user.uid + '/refreshTime');
+                                                                                            callback = (snapshot: any) => {
+                                                                                                // Force refresh to pick up the latest custom claims changes.
+                                                                                                // Note this is always triggered on first call. Further optimization could be
+                                                                                                // added to avoid the initial trigger when the token is issued and already contains
+                                                                                                // the latest claims.
+                                                                                               // snapshot = snapshot;
+                                                                                                console.log("=====\nsnapshot: \n", snapshot);
+                                                                                                user.getIdToken(true);
+                                                                                            };
+                                                                                            // Subscribe new listener to changes on that node.
+                                                                                            metadataRef.on('value', callback);
+
+                                                                                            let isAdmin = false;
+
+                                                                                            await  user?.getIdTokenResult()
+                                                                                                .then((idTokenResult) => {
+                                                                                                    // Confirm the user is an Admin.
+                                                                                                    isAdmin = !!idTokenResult.claims.admin;
+                                                                                                    setState({
+                                                                                                        currentUserIsAdmin: isAdmin,
+                                                                                                    });
+                                                                                                    console.log("\n=====idTokemResult.claims\nisAdmin", isAdmin,"  |=> admin ",JSON.stringify(idTokenResult.claims.admin),"<=|");
+                                                                                                 })
+                                                                                                .catch((error) => {
+                                                                                                    console.log("getIdTokenResult error: ", error);
+                                                                                                });
+                                                                                            console.log("\n========== in authstatechanged\nuser: ", user);
+                                                                                            //addUserToDb(user);
+                                                                                        }
                                                                                     });
                                                                                 }}
                                                                         >
@@ -431,15 +387,9 @@ export const App = () => {
                                                                                         // The signed-in user info.
                                                                                         var user = result.user;
                                                                                         //console.log(" user ", user?.uid );
-                                                                                        let currUser = null;
-                                                                                        await getAppUser(user!.uid).then(function (result) {
-                                                                                            currUser = result;
-                                                                                            console.log("in login click curruser then ", currUser);
-                                                                                        });
-                                                                                        console.log("in login click curruser after then ", currUser);
                                                                                         setState({
                                                                                             // isLoading: false,
-                                                                                            currentAppUser: currUser ? currUser : NO_USER
+                                                                                            currentAppUser: user
                                                                                         });
                                                                                     }).catch(function (error) {
                                                                                         // Handle Errors here.
@@ -458,6 +408,48 @@ export const App = () => {
                                                                                             "==== =========== =====\n")
                                                                                         // ...
                                                                                     });
+
+                                                                                    let callback: { (snapshot: any): void; (a: firebase.database.DataSnapshot, b?: string | null | undefined): any; } | null = null;
+                                                                                    let metadataRef: firebase.database.Reference | null = null;
+                                                                                    firebase.auth().onAuthStateChanged(async user => {
+                                                                                        // Remove previous listener.
+                                                                                        if (callback) {
+                                                                                            metadataRef?.off('value', callback);
+                                                                                        }
+                                                                                        // On user login add new listener.
+                                                                                        if (user) {
+                                                                                            // Check if refresh is required.
+                                                                                            metadataRef = firebase.database().ref('metadata/' + user.uid + '/refreshTime');
+                                                                                            callback = (snapshot: any) => {
+                                                                                                // Force refresh to pick up the latest custom claims changes.
+                                                                                                // Note this is always triggered on first call. Further optimization could be
+                                                                                                // added to avoid the initial trigger when the token is issued and already contains
+                                                                                                // the latest claims.
+                                                                                                // snapshot = snapshot;
+                                                                                                 console.log("=====\nsnapshot: \n", snapshot);
+                                                                                                user.getIdToken(true);
+                                                                                            };
+                                                                                            // Subscribe new listener to changes on that node.
+                                                                                            metadataRef.on('value', callback);
+
+                                                                                            let isAdmin = false;
+                                                                                            await  user?.getIdTokenResult()
+                                                                                                .then((idTokenResult) => {
+                                                                                                    // Confirm the user is an Admin.
+                                                                                                    isAdmin = !!idTokenResult.claims.admin;
+                                                                                                    setState({
+                                                                                                        currentUserIsAdmin: isAdmin,
+                                                                                                    });
+                                                                                                    console.log("\n=====idTokemResult.claims\nisAdmin", isAdmin,"  |=> admin ",JSON.stringify(idTokenResult.claims.admin),"<=|");
+                                                                                                })
+                                                                                                .catch((error) => {
+                                                                                                    console.log("getIdTokenResult error: ", error);
+                                                                                                });
+                                                                                            console.log("\n========== in authstatechanged\nuser: ", user);
+                                                                                             //addUserToDb(user);
+                                                                                        }
+                                                                                    });
+
                                                                                 }}
                                                                         >
                                                                             <span className={"button-with-icon"}>Sign in with Facebook&nbsp;&nbsp;</span><img
