@@ -18,6 +18,11 @@ enum PalFilterType {
     NOT_PALINDROMES = "NOT_PALINDROMES",
 }
 
+enum TextFilterType {
+    IGNORE_SPACE_AND_PUNCTUATION = "IGNORE_SPACE_AND_PUNCTUATION",
+    EXACT_CASE_INSENSITIVE = "EXACT_CASE_INSENSITIVE",
+}
+
 interface IDbPalindrome {
     raw: string;
     cooked: string;
@@ -25,6 +30,8 @@ interface IDbPalindrome {
     selected: boolean;
     createTime: Date;
     user: any;
+    ownerUid: string;
+    ownerDisplayName: string;
     archived: boolean;
 }
 
@@ -40,6 +47,8 @@ interface IPalindromeForgeState {
     palfilters: {
         palFilterType: PalFilterType;
         textFilter: string;
+        textFilterSearchBy: string;
+        textFilterType: TextFilterType;
         onlyMine: boolean;
         includeArchived: boolean;
     }
@@ -74,6 +83,8 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                 palFilterType: PalFilterType.ALL,
                 onlyMine: false,
                 textFilter: "",
+                textFilterSearchBy: "",
+                textFilterType: TextFilterType.IGNORE_SPACE_AND_PUNCTUATION,
                 includeArchived: false
             },
             allNone: false,
@@ -122,6 +133,8 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                         var theRaw = `${change.doc.data().raw}`;
                         var theCooked = `${change.doc.data().cooked}`;
                         var theUser = `${change.doc.data().user}`;
+                        var theOwnerDisplayName = `${change.doc.data().ownerDisplayName}`;
+                        var theOwnerUid = `${change.doc.data().ownerUid}`;
                         var theArchived = String(`${change.doc.data().archived}`) === "true";
                         // if (theUser.startsWith("{")) {
                         //     theUser = JSON.parse(theUser).uid;
@@ -137,6 +150,8 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                             "selected": false,
                             "createTime": theCreateTime,
                             "user": theUser,
+                            "ownerDisplayName": theOwnerDisplayName,
+                            "ownerUid": theOwnerUid,
                             "archived": theArchived
                         });
                         if (outerThis.props.adminMode && outerThis.props.writeSuccessToLog) {
@@ -156,7 +171,7 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                     }
 
                 });
-                // console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
+                //console.log("After querySnap.forEach: " + JSON.stringify(thePalindromes.palindromes));
                 outerThis.setState({
                     dbPalindromes: thePalindromes
                 });
@@ -202,7 +217,7 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
 
         let newPal: any = {};
         console.log("in saveText before addToDb");
-        await this.addToDb(str).then(function (result) {
+        await this.addPalindromeToDb(str).then(function (result) {
             newPal = result;
             console.log("in save text added", newPal);
         });
@@ -272,7 +287,7 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
         });
     };
 
-    addToDb = async (str: any) => {
+    addPalindromeToDb = async (str: any) => {
         const userJSON: any = firebase.auth().currentUser?.toJSON();
         const reducedJson = JSON.stringify(Object.keys(userJSON).reduce((obj: any, key) => {
                 if (["uid", "displayName"].includes(key)) {
@@ -281,7 +296,9 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                 return obj;
             }, {}
         ));
-        // console.log("addingtoDB:\n",reducedJson);
+        let theDisplayName = userJSON.displayName;
+        let theOwnerUid = userJSON.uid;
+       // console.log("in addToDB:\n","theDisplayName ",theDisplayName,  " thOwnerUid ", theOwnerUid);
         let outerThis = this;
 
         let timeStamp = firestore.Timestamp.fromDate(new Date());
@@ -292,6 +309,8 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
             cooked: this.stripWhiteSpace(this.normalizeString(str)), // save space in DB, remove spaces
             createTime: timeStamp,
             user: reducedJson,
+            ownerUid: theOwnerUid,
+            ownerDisplayName: theDisplayName,
             archived: false
         })
             .then(function (docRef) {
@@ -342,33 +361,37 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                 palTypeOk = true;
         }
 
-        let theUser = JSON.parse(palEntry.user).uid;
-        let onlyMineOk = this.state.palfilters.onlyMine ? (theUser === firebase.auth().currentUser?.uid) : true;
+        let palfilters = this.state.palfilters;
+        let onlyMineOk = palfilters.onlyMine ? (palEntry.ownerUid === firebase.auth().currentUser?.uid) : true;
 
         // check textFilter
-        let textFilterOk = this.state.palfilters.textFilter.trim().length === 0 ||
-            palEntry.cooked.includes(this.state.palfilters.textFilter);
+        let textFilterOk = palfilters.textFilter.trim().length === 0 ||
+            (palfilters.textFilterType === TextFilterType.EXACT_CASE_INSENSITIVE ? palEntry.raw.toLowerCase() : palEntry.cooked.toLowerCase())
+                .includes(palfilters.textFilterSearchBy);
 
         // check archive filter
-        let archiveFilterOk = this.state.palfilters.includeArchived ? true : !palEntry.archived;
+        let archiveFilterOk = palfilters.includeArchived ? true : !palEntry.archived;
 
         return palTypeOk && onlyMineOk && textFilterOk && archiveFilterOk;
     };
 
     //
     handleTextFilter = (event: any) => {
-        let theTextFilter = this.normalizeString(event.target.value).trim();
+        let thePalfilters = this.state.palfilters;
+        thePalfilters.textFilter = event.target.value;
+        let theTextFilterSearchBy = (thePalfilters.textFilterType === TextFilterType.IGNORE_SPACE_AND_PUNCTUATION ? this.normalizeString(event.target.value) :
+            event.target.value).toLowerCase().trim();
+        thePalfilters.textFilterSearchBy = theTextFilterSearchBy;
+
         let thePalindromes = this.state.dbPalindromes.palindromes.slice();
         // unselect the entries hidden to avoid acting on hidden entries
         thePalindromes.map((entry) => {
-            if (!entry.raw.includes(theTextFilter)) {
+            let textToCheck = (thePalfilters.textFilterType === TextFilterType.IGNORE_SPACE_AND_PUNCTUATION ? entry.cooked : entry.raw).toLowerCase().trim();
+            if (!textToCheck.includes(theTextFilterSearchBy)) {
                 entry.selected = false;
             }
             return entry;
         });
-
-        let thePalfilters = this.state.palfilters;
-        thePalfilters.textFilter = theTextFilter;
 
         this.setState({
             palfilters: thePalfilters,
@@ -382,11 +405,8 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
         if (isChecked) {
             // deselect the hidden ones to avoid inadvertent action on them
             thePalindromes.map((entry) => {
-                let theUser = entry.user;
-                if (theUser.startsWith("{")) {
-                    theUser = JSON.parse(theUser).uid;
-                }
-                let isMine = (theUser === firebase.auth().currentUser?.uid);
+
+                let isMine = (entry.ownerUid === firebase.auth().currentUser?.uid);
                 if (!isMine) {
                     entry.selected = false;
                 }
@@ -467,7 +487,7 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
         });
     };
 
-    handleOptionChange = (event: { target: { value: string; }; }) => {
+    handlePalFilterTypeChange = (event: { target: { value: string; }; }) => {
         const palFilterTypeEnum = event.target.value as PalFilterType;
         let thePalindromes = this.state.dbPalindromes.palindromes.slice();
         if (palFilterTypeEnum !== PalFilterType.ALL) {
@@ -485,6 +505,20 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
         this.setState({
             palfilters: thePalfilters,
             dbPalindromes: {palindromes: thePalindromes}
+        });
+
+    };
+
+    handleTextFilterTypeChange = (event: { target: { value: string; }; }) => {
+        const textFilterTypeEnum = event.target.value as TextFilterType;
+
+        let thePalfilters = this.state.palfilters;
+        thePalfilters.textFilterType = textFilterTypeEnum;
+        let theTextFilter = thePalfilters.textFilter;
+        thePalfilters.textFilterSearchBy = (textFilterTypeEnum === TextFilterType.IGNORE_SPACE_AND_PUNCTUATION ? this.normalizeString(theTextFilter).toLowerCase() : theTextFilter).toLowerCase();
+console.log (thePalfilters);
+        this.setState({
+            palfilters: thePalfilters,
         });
 
     };
@@ -611,7 +645,7 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                                                     name="palfilter"
                                                     value={PalFilterType.ALL}
                                                     checked={this.state.palfilters.palFilterType === PalFilterType.ALL}
-                                                    onChange={this.handleOptionChange}
+                                                    onChange={this.handlePalFilterTypeChange}
                                                     className=""
                                                 />All
                                             </label>
@@ -623,7 +657,7 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                                                     name="palfilter"
                                                     value={PalFilterType.ONLY_PALINDROMES}
                                                     checked={this.state.palfilters.palFilterType === PalFilterType.ONLY_PALINDROMES}
-                                                    onChange={this.handleOptionChange}
+                                                    onChange={this.handlePalFilterTypeChange}
                                                     className=""
                                                 />Palindromes
                                             </label>
@@ -635,7 +669,7 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                                                     name="palfilter"
                                                     value={PalFilterType.NOT_PALINDROMES}
                                                     checked={this.state.palfilters.palFilterType === PalFilterType.NOT_PALINDROMES}
-                                                    onChange={this.handleOptionChange}
+                                                    onChange={this.handlePalFilterTypeChange}
                                                     className=""
                                                 />Non-palindromes
                                             </label>
@@ -672,12 +706,38 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                                         />Archived
                                     </td>
                                     <td>
-                                        <input placeholder={"search text"}
-                                               size={46}
-                                               type="text"
-                                               name="textFilter"
-                                               onChange={this.handleTextFilter}
-                                        />
+                                        <div className={"bordered"}>
+                                            <input placeholder={"search text (case insensitive)"}
+                                                   size={46}
+                                                   type="text"
+                                                   name="textFilter"
+                                                   onChange={this.handleTextFilter}
+                                            /><br/>
+                                            <div className="radio-button">
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="textfiltertype"
+                                                        value={TextFilterType.IGNORE_SPACE_AND_PUNCTUATION}
+                                                        checked={this.state.palfilters.textFilterType === TextFilterType.IGNORE_SPACE_AND_PUNCTUATION}
+                                                        onChange={this.handleTextFilterTypeChange}
+                                                        className=""
+                                                    />Ignore Space and Punctuation
+                                                </label>
+                                            </div>
+                                            <div className="radio-button">
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="textfiltertype"
+                                                        value={TextFilterType.EXACT_CASE_INSENSITIVE}
+                                                        checked={this.state.palfilters.textFilterType === TextFilterType.EXACT_CASE_INSENSITIVE}
+                                                        onChange={this.handleTextFilterTypeChange}
+                                                        className=""
+                                                    />Exact
+                                                </label>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -728,9 +788,9 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                                 .map((item, key) =>
                                     <tr key={key}>
                                         <td>
-                                            {(this.props.adminMode && !this.isCurrentUser(item.user)) &&
+                                            {(this.props.adminMode && !this.isCurrentUser(item.ownerUid)) &&
                                             <span className={"even-smaller"}>ADMIN<br/></span>}
-                                            {(this.isCurrentUser(item.user) || this.props.adminMode)
+                                            {(this.isCurrentUser(item.ownerUid) || this.props.adminMode)
                                             && <input
                                                 type="checkbox"
                                                 name="listitems"
@@ -749,7 +809,7 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
                                             {item.createTime.toLocaleString()}
                                         </td>
                                         <td>
-                                            {this.getUserName(item.user)}
+                                            {item.ownerDisplayName}
                                         </td>
                                     </tr>
                                 )}
@@ -761,15 +821,14 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
         );
     };
 
-    isCurrentUser = (user: any) => {
-        let theJson = JSON.parse(user);
-        return (theJson.uid === firebase.auth().currentUser?.uid);
+    isCurrentUser = (ownerUid: any) => {
+        return (ownerUid === firebase.auth().currentUser?.uid);
     };
 
-    getUserName = (user: any) => {
-        let theJson = JSON.parse(user);
-        return theJson.displayName ? theJson.displayName : theJson.uid;
-    }
+    // getUserName = (user: any) => {
+    //     let theJson = JSON.parse(user);
+    //     return theJson.displayName ? theJson.displayName : theJson.uid;
+    // }
 
     comparePals = (a: any, b: any) => {
         switch (this.state.columnState.sortInfo.sortCol) {
@@ -778,8 +837,8 @@ class PalindromeForge extends React.Component<IPalindromeForgeProps, IPalindrome
             case "entryColumn":
                 return this.state.columnState.sortInfo.sortDesc ? b.raw.localeCompare(a.raw) : a.raw.localeCompare(b.raw);
             case "uidColumn":
-                let aName = this.getUserName(a.user);
-                let bName = this.getUserName(b.user);
+                let aName = a.ownerDisplayName;
+                let bName = b.ownerDisplayName
                 return this.state.columnState.sortInfo.sortDesc ? bName.localeCompare(aName) :
                     aName.localeCompare(bName);
             default:

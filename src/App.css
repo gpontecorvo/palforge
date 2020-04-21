@@ -78,3 +78,7 @@ table.app-banner tr th:nth-child(1)  {
 .simple-list {
     list-style-type: none;
 }
+ .bordered {
+     padding: 5px;
+     border: thin black solid;
+ }
